@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ecce3471a8f7f94384aaa9bb7137fd5, type: 3}
+  m_Name: DamageTable
+  m_EditorClassIdentifier: 
+  types:
+  - {fileID: 11400000, guid: 844d3cc30ec0f2e4da75f4ea07bc5ac4, type: 2}
+  - {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
+  - {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
+  rows:
+  - damageRow: {fileID: 11400000, guid: 844d3cc30ec0f2e4da75f4ea07bc5ac4, type: 2}
+    multipliers:
+    - 1
+    - 0.5
+    - 2
+  - damageRow: {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
+    multipliers:
+    - 2
+    - 1
+    - 0.5
+  - damageRow: {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
+    multipliers:
+    - 0.5
+    - 2
+    - 1
