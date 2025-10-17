@@ -321,12 +321,20 @@ PrefabInstance:
       value: Basic Enemy
       objectReference: {fileID: 0}
     - target: {fileID: 8963787383035409709, guid: b9e48032ec92ea046bdbccfe5af3d4c2, type: 3}
+      propertyPath: m_LocalScale.x
+      value: -1.4493382
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963787383035409709, guid: b9e48032ec92ea046bdbccfe5af3d4c2, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.0806941
+      objectReference: {fileID: 0}
+    - target: {fileID: 8963787383035409709, guid: b9e48032ec92ea046bdbccfe5af3d4c2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3.8762648
+      value: -6.9887
       objectReference: {fileID: 0}
     - target: {fileID: 8963787383035409709, guid: b9e48032ec92ea046bdbccfe5af3d4c2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.379299
+      value: 4.4129
       objectReference: {fileID: 0}
     - target: {fileID: 8963787383035409709, guid: b9e48032ec92ea046bdbccfe5af3d4c2, type: 3}
       propertyPath: m_LocalPosition.z
