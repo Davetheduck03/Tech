@@ -4,10 +4,18 @@ using UnityEngine;
 
 public abstract class BaseEnemy : MonoBehaviour
 {
+    public UnitSO unitData;
 
+    private HealthComponent healthComponent;
+    private DamageComponent damageComponent;
+    private MovementComponent movementComponent;
 
-    protected void OnTriggerMove()
+    protected virtual void Init()
     {
-        //move enemy forward
+        healthComponent = GetComponent<HealthComponent>();
+        damageComponent = GetComponent<DamageComponent>();
+        movementComponent = GetComponent<MovementComponent>();
+
+
     }
 }
