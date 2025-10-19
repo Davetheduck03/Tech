@@ -600,10 +600,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2991360989031050439, guid: aeb53e6ea09bcd04695acd80f741cd07, type: 3}
-      propertyPath: cellSize
-      value: 2.5
-      objectReference: {fileID: 0}
     - target: {fileID: 4569397977780053403, guid: aeb53e6ea09bcd04695acd80f741cd07, type: 3}
       propertyPath: m_Name
       value: Astar
@@ -948,10 +944,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1127910862422278627, guid: 8c8356a182a07984386a87d2fb222da2, type: 3}
-      propertyPath: nodeLayer.m_Bits
-      value: 4294967295
-      objectReference: {fileID: 0}
     - target: {fileID: 1372632853429849624, guid: 8c8356a182a07984386a87d2fb222da2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 23.75
@@ -1052,10 +1044,6 @@ PrefabInstance:
     - target: {fileID: 3165906217435057868, guid: 9f2bf9e4f8341fe4a82a8156cbeccbc9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8741036554424706415, guid: 9f2bf9e4f8341fe4a82a8156cbeccbc9, type: 3}
-      propertyPath: nodeLayer.m_Bits
-      value: 4294967295
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

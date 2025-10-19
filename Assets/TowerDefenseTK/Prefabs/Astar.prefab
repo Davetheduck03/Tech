@@ -60,5 +60,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 10
   height: 10
-  cellSize: 1
+  cellSize: 2.5
   nodePrefab: {fileID: 3681054578605721300, guid: 194596597229c8d438631c1a75e0ae6c, type: 3}
