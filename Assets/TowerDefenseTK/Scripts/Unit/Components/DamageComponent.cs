@@ -2,19 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IDamage
-{
-    void Initialize(UnitSO data);
-    void TryDealDamage(GameObject target);
-}
-
-public class DamageComponent : MonoBehaviour, IDamage
+public class DamageComponent : UnitComponent
 {
     private float damage;
     private DamageType damageType;
 
 
-    public void Initialize(UnitSO data)
+    protected override void OnInitialize()
     {
         damage = data.damage;
         damageType = data.damageType;
