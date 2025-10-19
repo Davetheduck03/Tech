@@ -7,7 +7,6 @@ public class UnitPathFollower : MonoBehaviour
     private List<PathNode> path;
     private int currentIndex = 0;
 
-
     public void SetPath(List<PathNode> newPath, float moveSpeed)
     {
         path = newPath;

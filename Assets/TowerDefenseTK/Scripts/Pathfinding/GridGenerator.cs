@@ -1,10 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using UnityEngine;
 
 namespace TowerDefenseTK
 {
 
     public class GridGenerator : MonoBehaviour
     {
+        public static event Action OnGridGenerated;
+
+        public static GridGenerator Instance;
+
         [Header("Grid Settings")]
         public int width = 10;
         public int height = 10;
@@ -17,8 +23,10 @@ namespace TowerDefenseTK
 
         private void Start()
         {
+            GridGenerator.Instance = this;
             GenerateGrid();
             LinkNeighbors();
+            StartCoroutine(RandomBS());
         }
 
         private void GenerateGrid()
@@ -35,7 +43,9 @@ namespace TowerDefenseTK
                     Vector3 worldPos = origin + new Vector3(x * cellSize + cellSize / 2f, 0.75f, y * cellSize + cellSize / 2f);
 
                     // Spawn node in the center of the cell
-                    GameObject nodeObj = Instantiate(nodePrefab, worldPos, Quaternion.identity, transform);
+                    GameObject nodeObj = Instantiate(nodePrefab);
+                    nodeObj.transform.position = worldPos;
+                    nodeObj.transform.parent = this.transform;
                     nodeObj.name = $"Node ({x},{y})";
 
                     PathNode node = nodeObj.GetComponent<PathNode>();
@@ -48,6 +58,12 @@ namespace TowerDefenseTK
                     Astar.Instance.allNodes.Add(node);
                 }
             }
+        }
+
+        private IEnumerator RandomBS()
+        {
+            yield return new WaitForEndOfFrame();
+            OnGridGenerated?.Invoke();
         }
 
         private void LinkNeighbors()
