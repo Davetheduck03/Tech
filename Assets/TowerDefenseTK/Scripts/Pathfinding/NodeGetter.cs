@@ -45,7 +45,7 @@ public class NodeGetter : MonoBehaviour
     public static PathNode GetNodeBelow(Vector3 pos, LayerMask nodeLayer)
     {
         Ray ray = new Ray(pos, Vector3.down);
-        if (Physics.Raycast(ray, out RaycastHit hit, 5, nodeLayer))
+        if (Physics.Raycast(ray, out RaycastHit hit, 2, nodeLayer))
         {
             return hit.collider.GetComponent<PathNode>();
         }
@@ -64,6 +64,6 @@ public class NodeGetter : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawLine(transform.position + Vector3.up, transform.position + Vector3.down * 5f);
+        Gizmos.DrawLine(transform.position + Vector3.up, transform.position + Vector3.down * 2f);
     }
 }
