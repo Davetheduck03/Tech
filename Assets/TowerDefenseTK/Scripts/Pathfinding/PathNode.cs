@@ -5,6 +5,7 @@ public class PathNode : MonoBehaviour
 {
     public Vector2Int gridPosition;
     public bool isWalkable = true;
+    public bool isPlaceable = true;
     public List<PathNode> neighbors = new List<PathNode>();
 
     [HideInInspector] public float gCost;

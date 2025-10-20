@@ -29,7 +29,7 @@ namespace TowerDefenseTK
             StartCoroutine(RandomBS());
         }
 
-        private void GenerateGrid()
+        public void GenerateGrid()
         {
             grid = new PathNode[width, height];
 
@@ -39,10 +39,8 @@ namespace TowerDefenseTK
             {
                 for (int y = 0; y < height; y++)
                 {
-                    // 📍 Center of each cell
                     Vector3 worldPos = origin + new Vector3(x * cellSize + cellSize / 2f, 0.75f, y * cellSize + cellSize / 2f);
 
-                    // Spawn node in the center of the cell
                     GameObject nodeObj = Instantiate(nodePrefab);
                     nodeObj.transform.position = worldPos;
                     nodeObj.transform.parent = this.transform;
@@ -54,7 +52,6 @@ namespace TowerDefenseTK
 
                     grid[x, y] = node;
 
-                    // Register node to the pathfinding system
                     Astar.Instance.allNodes.Add(node);
                 }
             }
@@ -75,7 +72,6 @@ namespace TowerDefenseTK
                     PathNode node = grid[x, y];
                     node.neighbors.Clear();
 
-                    // 🔹 4-directional neighbors (N/E/S/W)
                     if (x > 0) node.neighbors.Add(grid[x - 1, y]);
                     if (x < width - 1) node.neighbors.Add(grid[x + 1, y]);
                     if (y > 0) node.neighbors.Add(grid[x, y - 1]);
