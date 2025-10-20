@@ -58,7 +58,6 @@ public class NodeGetter : MonoBehaviour
             if (node != null)
                 return node;
         }
-
         return null;
     }
 

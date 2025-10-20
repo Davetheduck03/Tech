@@ -5,6 +5,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Tower Data", menuName = "TD Toolkit/Units/Tower")]
 public class TowerSO : UnitSO
 {
+
     [Header("Tower Stats")]
     public float fireRate;
     public float range;
