@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 842516d76373da240ab09b6c2b96935e, type: 3}
   m_Name: SOManager
   m_EditorClassIdentifier: 
-  DamageTable: {fileID: 0}
+  DamageTable: {fileID: 11400000, guid: 7338c39d063cff2458e271160712b668, type: 2}

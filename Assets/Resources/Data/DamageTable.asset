@@ -14,21 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   types:
   - {fileID: 11400000, guid: 844d3cc30ec0f2e4da75f4ea07bc5ac4, type: 2}
-  - {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
   - {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
+  - {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
   rows:
   - damageRow: {fileID: 11400000, guid: 844d3cc30ec0f2e4da75f4ea07bc5ac4, type: 2}
     multipliers:
-    - 1
+    - 1123231
     - 0.5
     - 2
-  - damageRow: {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
-    multipliers:
-    - 2
-    - 1
-    - 0.5
   - damageRow: {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
     multipliers:
+    - 321321
+    - 1
     - 0.5
+  - damageRow: {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
+    multipliers:
+    - 0.54234236
     - 2
     - 1
