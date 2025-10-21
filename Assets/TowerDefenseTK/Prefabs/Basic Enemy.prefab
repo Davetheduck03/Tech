@@ -13,6 +13,10 @@ GameObject:
   - component: {fileID: 5528603919585018398}
   - component: {fileID: 8964737319779582677}
   - component: {fileID: 4095461326607765042}
+  - component: {fileID: 6853520611405758721}
+  - component: {fileID: 3032450455030925829}
+  - component: {fileID: 8139475845202714046}
+  - component: {fileID: 745047573007602876}
   m_Layer: 0
   m_Name: Basic Enemy
   m_TagString: Untagged
@@ -120,3 +124,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 621b8c73c5989b74e920439ab39c78e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6853520611405758721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925093184119205307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 750bba27db0455b45a56b4f75f696808, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unitData: {fileID: 11400000, guid: b72eb3590d81f0e44b9b46078a9fda8c, type: 2}
+--- !u!114 &3032450455030925829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925093184119205307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4775cf00886159b428faed9daafa9382, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDamagable: 0
+--- !u!114 &8139475845202714046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925093184119205307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9897a602b6500e45a7e40ac6cb91dd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &745047573007602876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4925093184119205307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a150960d87fe8de41aec131db314e54a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movement_Speed: 0
+  nodeLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  targetTransform: {fileID: 0}
