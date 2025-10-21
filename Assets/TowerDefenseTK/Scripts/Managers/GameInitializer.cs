@@ -8,6 +8,6 @@ public class GameInitializer : MonoBehaviour
 
     private void Awake()
     {
-        DamageTable.Instance = damageTable;
+
     }
 }

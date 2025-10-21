@@ -16,8 +16,6 @@ public class DamageModifierRow
 [CreateAssetMenu(fileName = "DamageTable", menuName = "TD Toolkit/Damage Table")]
 public class DamageTable : ScriptableObject
 {
-    public static DamageTable Instance;
-
     public List<DamageType> types = new List<DamageType>();
     public List<DamageModifierRow> rows = new List<DamageModifierRow>();
 

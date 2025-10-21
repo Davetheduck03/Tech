@@ -35,11 +35,11 @@ public abstract class UnitSO : ScriptableObject
     {
         float result = baseAmount;
 
-        if (DamageTable.Instance != null && defenseTypes != null && defenseTypes.Count > 0)
+        if (SOManager.Instance.DamageTable != null && defenseTypes != null && defenseTypes.Count > 0)
         {
             foreach (var defType in defenseTypes)
             {
-                result *= DamageTable.Instance.GetMultiplier(incomingType, defType);
+                result *= SOManager.Instance.DamageTable.GetMultiplier(incomingType, defType);
             }
         }
 
