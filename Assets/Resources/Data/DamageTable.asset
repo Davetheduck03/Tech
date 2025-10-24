@@ -12,23 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ecce3471a8f7f94384aaa9bb7137fd5, type: 3}
   m_Name: DamageTable
   m_EditorClassIdentifier: 
-  types:
+  attackTypes:
   - {fileID: 11400000, guid: 844d3cc30ec0f2e4da75f4ea07bc5ac4, type: 2}
-  - {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
   - {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
+  - {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
+  defenseTypes:
+  - {fileID: 11400000, guid: 796f468a4dc739647a69d351c2982a26, type: 2}
+  - {fileID: 11400000, guid: 22f1e73a4654d2b45a01ac7de4434254, type: 2}
+  - {fileID: 11400000, guid: babc6af5ca75ddc44a0d4b5d8832e0ea, type: 2}
   rows:
-  - damageRow: {fileID: 11400000, guid: 844d3cc30ec0f2e4da75f4ea07bc5ac4, type: 2}
+  - defenseType: {fileID: 11400000, guid: 796f468a4dc739647a69d351c2982a26, type: 2}
     multipliers:
-    - 1123231
-    - 0.5
-    - 2
-  - damageRow: {fileID: 11400000, guid: a440eef224225114f9ee7eac501a1afd, type: 2}
-    multipliers:
-    - 321321
     - 1
-    - 0.5
-  - damageRow: {fileID: 11400000, guid: d571686563350f24e80a9c775f335111, type: 2}
-    multipliers:
-    - 0.54234236
     - 2
+    - 0.5
+  - defenseType: {fileID: 11400000, guid: 22f1e73a4654d2b45a01ac7de4434254, type: 2}
+    multipliers:
+    - 0.5
+    - 1
+    - 2
+  - defenseType: {fileID: 11400000, guid: babc6af5ca75ddc44a0d4b5d8832e0ea, type: 2}
+    multipliers:
+    - 2
+    - 0.5
     - 1

@@ -22,7 +22,7 @@ public abstract class UnitSO : ScriptableObject
     public DamageType damageType;
 
     [Header("Defense Info")]
-    public List<DamageType> defenseTypes = new List<DamageType>();
+    public List<DefenseType> defenseTypes = new List<DefenseType>();
 
 
     [Header("Optional Stats")]
