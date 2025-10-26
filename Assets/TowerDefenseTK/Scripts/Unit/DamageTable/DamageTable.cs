@@ -14,7 +14,6 @@ public class DamageTable : ScriptableObject
 {
     [Header("Damage Type Lists")]
     public List<DamageType> attackTypes = new List<DamageType>();
-    public List<DefenseType> defenseTypes = new List<DefenseType>();
 
     [Header("Table Data")]
     public List<DefenseRow> rows = new List<DefenseRow>();
@@ -24,32 +23,30 @@ public class DamageTable : ScriptableObject
     /// </summary>
     public float GetMultiplier(DamageType attackType, DefenseType defenseType)
     {
-        int rowIndex = defenseTypes.IndexOf(defenseType);
+        var row = rows.Find(r => r.defenseType == defenseType);
         int colIndex = attackTypes.IndexOf(attackType);
 
-        if (rowIndex < 0 || colIndex < 0)
-            return 1f;
+        if (row == null || colIndex < 0)
+            return 1f; // default multiplier if not found
 
-        return rows[rowIndex].multipliers[colIndex];
+        return row.multipliers[colIndex];
     }
 
     /// <summary>
-    /// Initializes or rebuilds the table structure.
+    /// Ensures all rows are aligned with the attack type list.
+    /// Adds missing multipliers and trims extras if necessary.
     /// </summary>
     public void InitializeTable()
     {
-        rows.Clear();
-
-        foreach (var defense in defenseTypes)
+        foreach (var row in rows)
         {
-            var row = new DefenseRow();
-            row.defenseType = defense;
-
-            // Initialize one multiplier per attack type
-            for (int i = 0; i < attackTypes.Count; i++)
+            // Add multipliers if there are fewer than attack types
+            while (row.multipliers.Count < attackTypes.Count)
                 row.multipliers.Add(1f);
 
-            rows.Add(row);
+            // Trim extra multipliers if attackTypes list shrank
+            while (row.multipliers.Count > attackTypes.Count)
+                row.multipliers.RemoveAt(row.multipliers.Count - 1);
         }
     }
 }
