@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TowerDefenseTK;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -46,6 +47,14 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            foreach(var enemy in FindObjectsByType<MovementComponent>(FindObjectsSortMode.None))
+            {
+                enemy.OnTriggerMove();
+            }
+        }
+
         if (currentState == null)
         {
             return;

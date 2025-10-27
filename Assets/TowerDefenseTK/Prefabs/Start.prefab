@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 3266186394684913817}
   - component: {fileID: 5091051805680838162}
   - component: {fileID: 8741036554424706415}
+  - component: {fileID: 538342864570134891}
+  - component: {fileID: 3372990087710288403}
   m_Layer: 0
   m_Name: Start
   m_TagString: Start
@@ -59,6 +61,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -100,3 +105,34 @@ MonoBehaviour:
   nodeLayer:
     serializedVersion: 2
     m_Bits: 64
+--- !u!114 &538342864570134891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1823342541018900914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c6007a6a5e2c354ca2c8fe56f83b25c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pathnodes:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  endGoal: {fileID: 0}
+--- !u!114 &3372990087710288403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1823342541018900914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b28a048c0d0443418f1432e9db68ee1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemy: {fileID: 4925093184119205307, guid: b9e48032ec92ea046bdbccfe5af3d4c2, type: 3}

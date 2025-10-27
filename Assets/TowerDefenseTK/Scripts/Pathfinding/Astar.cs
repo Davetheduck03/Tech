@@ -11,7 +11,9 @@ namespace TowerDefenseTK
 
         public List<PathNode> allNodes = new List<PathNode>();
 
-        public Dictionary<(PathNode, PathNode), List<PathNode>> pathCache = new Dictionary<(PathNode, PathNode), List<PathNode>>();
+        public Dictionary<(PathNode, PathNode), List<PathNode>> generatedPathCache = new Dictionary<(PathNode, PathNode), List<PathNode>>();
+        public Dictionary<(PathNode, PathNode), List<PathNode>> customPathCache = new Dictionary<(PathNode, PathNode), List<PathNode>>();
+
 
         private void OnEnable()
         {
@@ -34,7 +36,7 @@ namespace TowerDefenseTK
                         var path = FindPath(startNode, endNode);
                         if (path != null)
                         {
-                            pathCache[(startNode, endNode)] = path;
+                            generatedPathCache[(startNode, endNode)] = path;
                         }
                     }
                 }
@@ -55,9 +57,9 @@ namespace TowerDefenseTK
         public List<PathNode> FindPath(PathNode start, PathNode goal)
         {
             var key = (start, goal);
-            if (pathCache.ContainsKey(key))
+            if (generatedPathCache.ContainsKey(key))
             {
-                return pathCache[key];
+                return generatedPathCache[key];
             }
 
             var openSet = new List<PathNode>();
@@ -81,7 +83,7 @@ namespace TowerDefenseTK
                 if (current == goal)
                 {
                     var path = ReconstructPath(start, goal);
-                    pathCache[key] = path;
+                    generatedPathCache[key] = path;
                     return path;
                 }
 
@@ -132,7 +134,7 @@ namespace TowerDefenseTK
 
         public void ClearCache()
         {
-            pathCache.Clear();
+            generatedPathCache.Clear();
         }
     }
 }

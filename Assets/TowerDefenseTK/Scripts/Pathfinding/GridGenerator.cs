@@ -31,7 +31,9 @@ namespace TowerDefenseTK
 
         public void GenerateGrid()
         {
-            grid = new PathNode[width, height];
+            // Ensure grid array exists and matches current dimensions
+            if (grid == null || grid.GetLength(0) != width || grid.GetLength(1) != height)
+                grid = new PathNode[width, height];
 
             Vector3 origin = transform.position;
 
@@ -39,19 +41,29 @@ namespace TowerDefenseTK
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Vector3 worldPos = origin + new Vector3(x * cellSize + cellSize / 2f, 0.75f, y * cellSize + cellSize / 2f);
+                    // Reuse existing node if already present
+                    if (grid[x, y] != null)
+                    {
+                        PathNode existingNode = grid[x, y];  // <-- Different name
+                        existingNode.isWalkable = true;
+                        existingNode.gridPosition = new Vector2Int(x, y);
+                        continue; // Skip instantiation
+                    }
 
-                    GameObject nodeObj = Instantiate(nodePrefab);
-                    nodeObj.transform.position = worldPos;
-                    nodeObj.transform.parent = this.transform;
+                    // Spawn new node
+                    Vector3 worldPos = origin + new Vector3(
+                        x * cellSize + cellSize / 2f,
+                        0.75f,
+                        y * cellSize + cellSize / 2f);
+
+                    GameObject nodeObj = Instantiate(nodePrefab, worldPos, Quaternion.identity, transform);
                     nodeObj.name = $"Node ({x},{y})";
 
-                    PathNode node = nodeObj.GetComponent<PathNode>();
+                    PathNode node = nodeObj.GetComponent<PathNode>(); // <-- 'node' only declared once here
                     node.gridPosition = new Vector2Int(x, y);
                     node.isWalkable = true;
 
                     grid[x, y] = node;
-
                     Astar.Instance.allNodes.Add(node);
                 }
             }
@@ -108,7 +120,6 @@ namespace TowerDefenseTK
                 Gizmos.DrawLine(start, end);
             }
 
-            // 🟥 Draw blocked cells
             if (grid != null)
             {
                 for (int x = 0; x < width; x++)
