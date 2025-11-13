@@ -20,5 +20,6 @@ MonoBehaviour:
   goldReward: 15
   damage: 0
   damageType: {fileID: 0}
+  isTargetable: 1
   defenseTypes: []
   armor: 0

@@ -20,6 +20,7 @@ public abstract class UnitSO : ScriptableObject
 
     [Header("Attack Info")]
     public DamageType damageType;
+    public bool isTargetable;
 
     [Header("Defense Info")]
     public List<DefenseType> defenseTypes = new List<DefenseType>();
