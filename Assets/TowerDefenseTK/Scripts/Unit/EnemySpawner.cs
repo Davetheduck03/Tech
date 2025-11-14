@@ -7,11 +7,11 @@ namespace TowerDefenseTK
     {
         public GameObject enemy;
 
-        void Start()
-        {
-            var customPath = this.gameObject.GetComponent<CustomPathHandler>();
-            Instantiate(enemy, this.transform.position, Quaternion.identity);
-            enemy.GetComponent<MovementComponent>().targetTransform = customPath.endGoal;
-        }
+        //void Start()
+        //{
+        //    var customPath = this.gameObject.GetComponent<CustomPathHandler>();
+        //    Instantiate(enemy, this.transform.position, Quaternion.identity);
+        //    enemy.GetComponent<MovementComponent>().targetTransform = customPath.endGoal;
+        //}
     }
 }

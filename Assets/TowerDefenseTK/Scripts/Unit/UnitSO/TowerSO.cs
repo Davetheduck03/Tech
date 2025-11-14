@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+using System.Linq;
 
 [CreateAssetMenu(fileName = "New Tower Data", menuName = "TD Toolkit/Units/Tower")]
 public class TowerSO : UnitSO
@@ -22,6 +24,13 @@ public class TowerSO : UnitSO
         Weakest
     }
 
+    public enum TargetGroup
+    {
+        Ground,
+        Air,
+        Both
+    }
+
     [Header("Tower Stats")]
     public float fireRate;
     public float range;
@@ -29,6 +38,7 @@ public class TowerSO : UnitSO
     public float projectileSpeed;
     public TowerType towerType;
     public TargetType towerTargetType = TargetType.First;
+    public TargetGroup targetGroup;
 
     [Tooltip("Gold cost to build this tower.")]
     public int buildCost;
@@ -40,24 +50,24 @@ public class TowerSO : UnitSO
     public float lastScanTime;
     public float scanInterval;
 
-    public BaseUnit FindTarget(Vector3 agentPos, float range)
+    public BaseEnemy FindTarget(Vector3 agentPos, float range)
     {
-        if(currentTarget != null && currentTarget.gameObject.activeInHierarchy && Vector3.Distance(currentTarget.transform.position, agentPos) <= range)
+        if (currentTarget != null && currentTarget.gameObject.activeInHierarchy && Vector3.Distance(currentTarget.transform.position, agentPos) <= range)
         {
             return currentTarget;
         }
 
         currentTarget = null;
 
-        if(Time.time -  lastScanTime < scanInterval) return null;
+        if (Time.time - lastScanTime < scanInterval) return null;
 
         lastScanTime = Time.time;
 
         var enemies = GetEnemiesInRange(agentPos, range);
-        if( enemies.Count == 0 ) return null;
+        if (enemies.Count == 0) return null;
 
         currentTarget = GetEnemy(agentPos, GetEnemiesInRange(agentPos, range));
-        
+
         return currentTarget;
     }
 
@@ -65,8 +75,8 @@ public class TowerSO : UnitSO
     {
         var hits = Physics.OverlapSphere(agentPos, range, LayerMask.GetMask("Enemy"));
         var enemyList = new List<BaseEnemy>(hits.Length);
-        
-        foreach(var hit in hits)
+
+        foreach (var hit in hits)
         {
             var enemy = hit.GetComponent<BaseEnemy>();
             if (enemy != null)
@@ -80,12 +90,13 @@ public class TowerSO : UnitSO
     public BaseEnemy GetEnemy(Vector3 agentPos, List<BaseEnemy> elegibleEnemies)
     {
         return towerTargetType switch
-        { 
-            TargetType.First => GetFirst(),
-            TargetType.Last => GetLast(),
-            TargetType.Weakest => GetWeakest(),
-            TargetType.Strongest => GetStrongest(),
-            TargetType.Closest => GetClostest(agentPos, elegibleEnemies)
+        {
+            TargetType.First => GetFirst(elegibleEnemies),
+            TargetType.Last => GetLast(elegibleEnemies),
+            TargetType.Weakest => GetWeakest(elegibleEnemies),
+            TargetType.Strongest => GetStrongest(elegibleEnemies),
+            TargetType.Closest => GetClostest(agentPos, elegibleEnemies),
+            _ => throw new System.NotImplementedException($"Target type {towerTargetType} is not supported.")
         };
     }
 
@@ -94,40 +105,63 @@ public class TowerSO : UnitSO
         BaseEnemy closest = null;
         float closestDist = float.MaxValue;
 
-        foreach(var enemy in elegibleEnemies)
+        foreach (var enemy in elegibleEnemies)
         {
             float dist = Vector3.Distance(enemy.transform.position, agentPos);
-            if(dist < closestDist)
+            if (dist < closestDist)
             {
                 closestDist = dist;
                 closest = enemy;
             }
         }
 
-        return closest; 
+        return closest;
     }
 
-    public BaseEnemy GetFirst()
+    public BaseEnemy GetFirst(List<BaseEnemy> elegibleEnemies)
     {
-        return null;
+        BaseEnemy first = elegibleEnemies[0];
+        return first;
     }
 
-    public BaseEnemy GetStrongest()
+    public BaseEnemy GetStrongest(List<BaseEnemy> elegibleEnemies)
     {
-
-        return null;
+        //Get highest current health enemy
+        BaseEnemy highestHealth = null;
+        float highest = 0f;
+        foreach (BaseEnemy enemy in elegibleEnemies)
+        {
+            var healthComponent = enemy.gameObject.GetComponent<HealthComponent>();
+            if (healthComponent.currentHealth >= highest)
+            {
+                highest = healthComponent.currentHealth;
+                highestHealth = enemy;
+            }
+        }
+        return highestHealth;
     }
 
-    public BaseEnemy GetWeakest()
+    public BaseEnemy GetWeakest(List<BaseEnemy> elegibleEnemies)
     {
-        return null;
+        //Get lowest current health enemy
+        BaseEnemy lowestHealth = null;
+        float lowest = 0f;
+        foreach (BaseEnemy enemy in elegibleEnemies)
+        {
+            var healthComponent = enemy.gameObject.GetComponent<HealthComponent>();
+            if (healthComponent.currentHealth <= lowest)
+            {
+                lowest = healthComponent.currentHealth;
+                lowestHealth = enemy;
+            }
+        }
+        return lowestHealth;
     }
 
-    public BaseEnemy GetLast()
+    public BaseEnemy GetLast(List<BaseEnemy> elegibleEnemies)
     {
-        return null;
+        
+        BaseEnemy last = elegibleEnemies.Last();
+        return last;
     }
-
-
-
 }

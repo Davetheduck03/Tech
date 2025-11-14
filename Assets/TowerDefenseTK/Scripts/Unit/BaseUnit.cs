@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class BaseUnit : MonoBehaviour
 {
-    public UnitSO unitData;
+    [SerializeField] protected UnitSO unitData;
 
     private List<UnitComponent> components = new List<UnitComponent>();
 
-    private void Awake()
+    protected virtual void Awake()
     {
         // Get all components that inherit from UnitComponent
         GetComponents(components);

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class HealthComponent : UnitComponent
 {
-    private float currentHealth;
+    public float currentHealth;
     public bool isDamagable;
 
     protected override void OnInitialize()
