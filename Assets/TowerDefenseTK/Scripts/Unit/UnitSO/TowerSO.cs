@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using System.Linq;
+using Unity.VisualScripting.FullSerializer;
+using Unity.VisualScripting;
 
 [CreateAssetMenu(fileName = "New Tower Data", menuName = "TD Toolkit/Units/Tower")]
 public class TowerSO : UnitSO
@@ -67,7 +69,6 @@ public class TowerSO : UnitSO
         if (enemies.Count == 0) return null;
 
         currentTarget = GetEnemy(agentPos, GetEnemiesInRange(agentPos, range));
-
         return currentTarget;
     }
 
@@ -75,6 +76,8 @@ public class TowerSO : UnitSO
     {
         var hits = Physics.OverlapSphere(agentPos, range, LayerMask.GetMask("Enemy"));
         var enemyList = new List<BaseEnemy>(hits.Length);
+
+        Debug.Log("Enemies found in vicinity, amount: " + hits.Length);
 
         foreach (var hit in hits)
         {
@@ -160,7 +163,6 @@ public class TowerSO : UnitSO
 
     public BaseEnemy GetLast(List<BaseEnemy> elegibleEnemies)
     {
-        
         BaseEnemy last = elegibleEnemies.Last();
         return last;
     }

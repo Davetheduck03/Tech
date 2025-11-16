@@ -292,25 +292,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -5499238835861450326, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6811615284067369269, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
       propertyPath: m_Name
       value: Turret
       objectReference: {fileID: 0}
     - target: {fileID: 8945953728980110933, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 13.73
+      value: 11.25
       objectReference: {fileID: 0}
     - target: {fileID: 8945953728980110933, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.75
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: 8945953728980110933, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.69
+      value: 3.75
       objectReference: {fileID: 0}
     - target: {fileID: 8945953728980110933, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
       propertyPath: m_LocalRotation.w

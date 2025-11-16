@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Turret Tower
   m_EditorClassIdentifier: 
   UnitName: Turret Tower
-  UnitPrefab: {fileID: 0}
+  UnitPrefab: {fileID: 6811615284067369269, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
   Icon: {fileID: 0}
   Health: 50
   Speed: 0
@@ -24,7 +24,7 @@ MonoBehaviour:
   defenseTypes: []
   armor: 0
   fireRate: 1
-  range: 3
+  range: 10
   isAoE: 0
   projectileSpeed: 50
   towerType: 0

@@ -1,20 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
-using TowerDefenseTK;
 using UnityEngine;
 
-public class BaseTower : BaseUnit
+namespace TowerDefenseTK
 {
-    private TowerSO towerSO;
-    
-
-    protected override void Awake()
+    public class BaseTower : BaseUnit
     {
-        if( unitData is TowerSO)
-        {
-            towerSO = (TowerSO)unitData;
-        }
-        base.Awake();
-    }
+        public TowerSO towerSO;
+        [SerializeField] private TowerWeapon t_Weapon;
+        [SerializeField] private TowerBase t_Base;
 
+
+        protected override void Awake()
+        {
+            if (unitData is TowerSO)
+            {
+                towerSO = (TowerSO)unitData;
+            }
+            base.Awake();
+            t_Weapon.Init();
+        }
+
+    }
 }

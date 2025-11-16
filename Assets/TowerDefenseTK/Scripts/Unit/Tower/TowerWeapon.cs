@@ -7,18 +7,26 @@ namespace TowerDefenseTK
     public class TowerWeapon : MonoBehaviour
     {
         private TowerSO towerData;
-        private BaseEnemy currentEnemy;
 
 
-        private void Awake()
+        public void Init()
         {
-            towerData = gameObject.GetComponent<TowerSO>();
+            towerData = gameObject.GetComponentInParent<BaseTower>().towerSO;
         }
 
         private void Update()
         {
-             currentEnemy = towerData.FindTarget(transform.position, towerData.range);
-             
+            Target(towerData.FindTarget(transform.position, towerData.range));
+        }
+
+        private void Target(BaseEnemy currentEnemy)
+        {
+            gameObject.transform.LookAt(currentEnemy.transform);
+        }
+
+        private void Shoot()
+        {
+
         }
     }
 }

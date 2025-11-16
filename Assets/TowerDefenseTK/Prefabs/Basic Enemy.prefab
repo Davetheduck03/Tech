@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 3032450455030925829}
   - component: {fileID: 8139475845202714046}
   - component: {fileID: 745047573007602876}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Basic Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -64,6 +64,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -149,6 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4775cf00886159b428faed9daafa9382, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentHealth: 0
   isDamagable: 0
 --- !u!114 &8139475845202714046
 MonoBehaviour:
