@@ -6,7 +6,6 @@ namespace TowerDefenseTK
 {
     public class UnitPathFollower : MonoBehaviour
     {
-
         private List<PathNode> path;
         private int currentIndex = 0;
         private Coroutine followRoutine;
@@ -40,10 +39,16 @@ namespace TowerDefenseTK
             SetPath(newPath, movementComp.movement_Speed, movementComp);
         }
 
-
         private IEnumerator FollowPath(float moveSpeed)
         {
             PathNode.OnNodeUpdated += HandleNodeBlocked;
+
+            var enemy = GetComponent<BaseEnemy>();
+            if (enemy != null)
+            {
+                enemy.totalPathNodes = path.Count;
+                enemy.nodesPassed = 0;
+            }
 
             while (currentIndex < path.Count)
             {
@@ -57,7 +62,6 @@ namespace TowerDefenseTK
                 }
 
                 Vector3 targetPos = targetNode.transform.position;
-
 
                 while (Vector3.Distance(transform.position, targetPos) > 0.15f)
                 {
@@ -79,6 +83,9 @@ namespace TowerDefenseTK
                 }
 
                 currentIndex++;
+
+                if (enemy != null)
+                    enemy.nodesPassed = currentIndex;
             }
             PathNode.OnNodeUpdated -= HandleNodeBlocked;
         }

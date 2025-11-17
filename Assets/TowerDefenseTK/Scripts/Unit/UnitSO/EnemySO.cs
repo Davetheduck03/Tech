@@ -5,5 +5,5 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Enemy Data", menuName = "TD Toolkit/Units/Enemy")]
 public class EnemySO : UnitSO
 {
-
+    public bool isFlying;
 }

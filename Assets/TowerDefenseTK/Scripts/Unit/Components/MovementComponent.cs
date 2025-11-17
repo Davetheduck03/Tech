@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace TowerDefenseTK
 {
-
     public class MovementComponent : UnitComponent
     {
         public float movement_Speed;
         private UnitPathFollower agent;
         public LayerMask nodeLayer;
+        public bool isFlying;
 
         [Tooltip("Assign a Transform that represents the movement goal (e.g. the end waypoint).")]
         public Transform targetTransform;
@@ -17,6 +17,9 @@ namespace TowerDefenseTK
         {
             movement_Speed = data.Speed;
             agent = GetComponent<UnitPathFollower>();
+
+            var enemy = GetComponent<BaseEnemy>();
+            if (enemy != null) enemy.isFlying = isFlying;
         }
 
         private PathNode CheckTarget()
@@ -26,7 +29,6 @@ namespace TowerDefenseTK
 
         public void OnTriggerMove()
         {
-
             PathNode start = NodeGetter.GetNodeBelow(transform.position + Vector3.up * 0.5f, nodeLayer);
             PathNode goal = CheckTarget();
 
@@ -35,7 +37,6 @@ namespace TowerDefenseTK
             var cacheKey = (start, goal);
             List<PathNode> path;
 
-
             if (Astar.Instance.customPathCache.ContainsKey(cacheKey))
             {
                 path = Astar.Instance.customPathCache[cacheKey];
@@ -43,7 +44,6 @@ namespace TowerDefenseTK
                 agent.SetPath(path, movement_Speed, this);
                 return;
             }
-
             else if (Astar.Instance.generatedPathCache.ContainsKey(cacheKey))
             {
                 path = Astar.Instance.generatedPathCache[cacheKey];
@@ -51,14 +51,13 @@ namespace TowerDefenseTK
                 agent.SetPath(path, movement_Speed, this);
                 return;
             }
-
             else
             {
                 path = Astar.Instance.FindPath(start, goal);
                 Debug.Log("Computed new path.");
+
                 agent.SetPath(path, movement_Speed, this);
             }
-
         }
     }
 }
