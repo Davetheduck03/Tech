@@ -18,19 +18,16 @@ MonoBehaviour:
   Health: 50
   Speed: 0
   goldReward: 0
-  damage: 1
+  damage: 3
   damageType: {fileID: 0}
   isTargetable: 0
   defenseTypes: []
   armor: 0
-  fireRate: 1
-  range: 10
+  fireRate: 1.5
+  range: 6
   isAoE: 0
   projectileSpeed: 50
   towerType: 0
   towerTargetType: 2
   targetGroup: 0
   buildCost: 50
-  currentTarget: {fileID: 0}
-  lastScanTime: 0
-  scanInterval: 0.5

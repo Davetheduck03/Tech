@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f31d933f888144bb93d063484eaf12, type: 3}
+  m_Name: AOE Tower
+  m_EditorClassIdentifier: 
+  UnitName: Canoon
+  UnitPrefab: {fileID: 6811615284067369269, guid: f43d7ff1316e6ce418ee97b02c356065, type: 3}
+  Icon: {fileID: 0}
+  Health: 80
+  Speed: 0
+  goldReward: 0
+  damage: 8
+  damageType: {fileID: 0}
+  isTargetable: 0
+  defenseTypes: []
+  armor: 0
+  fireRate: 1
+  range: 7
+  isAoE: 0
+  projectileSpeed: 30
+  towerType: 1
+  towerTargetType: 0
+  targetGroup: 0
+  buildCost: 120

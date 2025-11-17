@@ -250,7 +250,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5de44616f40188546ba0a5f10dcc5906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unitData: {fileID: 11400000, guid: 07b75a1332ac31d47a7773c5a04b0a27, type: 2}
+  unitData: {fileID: 11400000, guid: 212d02c02e1e6084ba40f0d9ed470f24, type: 2}
   towerSO: {fileID: 0}
   t_Weapon: {fileID: 1871703259406638194}
   t_Base: {fileID: 7861700384267359383}
