@@ -13,11 +13,13 @@ public class TowerSO : UnitSO
     [Header("Tower Stats")]
     public float fireRate;
     public float range;
-    public bool isAoE;
-    public float projectileSpeed;
+
     public TowerType towerType;
     public TargetType towerTargetType = TargetType.First;
     public TargetGroup targetGroup;
+    public AOEType AOEType;
+    public float projectileSpeed;
+    public GameObject projectilePrefab;
 
     [Tooltip("Gold cost to build this tower.")]
     public int buildCost;
@@ -30,6 +32,14 @@ public enum TowerType
     Support,
     Resource
 }
+
+public enum AOEType
+{
+    Cone,
+    Circle,
+    Turret_AOE
+}
+//Only used for AOE Towers
 
 public enum TargetType
 {

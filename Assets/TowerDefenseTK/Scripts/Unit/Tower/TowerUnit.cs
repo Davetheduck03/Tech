@@ -4,11 +4,13 @@ using UnityEngine;
 
 namespace TowerDefenseTK
 {
-    public class BaseTower : BaseUnit
+    public class TowerUnit : BaseUnit
     {
-        public TowerSO towerSO;
+        [HideInInspector] public TowerSO towerSO;
         [SerializeField] private TowerWeapon t_Weapon;
         [SerializeField] private TowerBase t_Base;
+        public DamageComponent damageComponent;
+        public HealthComponent healthComponent;
 
 
         protected override void Awake()
@@ -18,6 +20,8 @@ namespace TowerDefenseTK
                 towerSO = (TowerSO)unitData;
             }
             base.Awake();
+            damageComponent = GetComponent<DamageComponent>();
+            healthComponent = GetComponent<HealthComponent>();
             t_Weapon.Init();
         }
 

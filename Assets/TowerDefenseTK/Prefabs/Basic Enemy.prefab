@@ -140,6 +140,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unitData: {fileID: 11400000, guid: b72eb3590d81f0e44b9b46078a9fda8c, type: 2}
+  nodesPassed: 0
+  totalPathNodes: 0
+  isFlying: 0
 --- !u!114 &3032450455030925829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -182,4 +185,5 @@ MonoBehaviour:
   nodeLayer:
     serializedVersion: 2
     m_Bits: 64
-  targetTransform: {fileID: 0}
+  isFlying: 0
+  targetTransform: {fileID: 1372632853429849624, guid: 8c8356a182a07984386a87d2fb222da2, type: 3}

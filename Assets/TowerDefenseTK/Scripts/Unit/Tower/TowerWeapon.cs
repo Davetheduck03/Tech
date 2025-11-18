@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ namespace TowerDefenseTK
         [Header("Muzzle (Optional)")]
         [SerializeField] private Transform shootingPoint;
 
-        private BaseTower parentTower;
+        private TowerUnit parentTower;
         private BaseEnemy currentTarget;
         private float lastFireTime;
         private float targetUpdateTimer;
@@ -24,11 +25,15 @@ namespace TowerDefenseTK
         private Vector3 targetDirection;
         private Quaternion targetRotation;
 
+        public DamageComponent damageComponent;
+        public HealthComponent healthComponent;
+
         public void Init()
         {
-            parentTower = GetComponentInParent<BaseTower>();
+            parentTower = GetComponentInParent<TowerUnit>();
             towerData ??= parentTower.towerSO;
-
+            damageComponent = parentTower.damageComponent;
+            healthComponent = parentTower.healthComponent;
 
             if (shootingPoint == null)
                 shootingPoint = transform.Find("ShootingPoint") ?? transform;
@@ -36,7 +41,49 @@ namespace TowerDefenseTK
 
         private void Update()
         {
+            switch (towerData.towerType)
+            {
+                case TowerType.Turret:
+                    TurretTick();
+                    break;
+                case TowerType.Support:
+                    SupportTick();
+                    break;
+                case TowerType.AoE:
+                    AOETick();
+                    break;
+                case TowerType.Resource:
+                    ResourceTick();
+                    break;
+            }
+        }
 
+        private void ResourceTick()
+        {
+            throw new NotImplementedException();
+        }
+
+        #region AOE Func
+
+        private void AOETick()
+        {
+            switch (towerData.AOEType)
+            {
+                case AOEType.Cone:
+
+                    break;
+                case AOEType.Circle:
+
+                    break;
+                case AOEType.Turret_AOE:
+                    
+                    break;
+            }
+
+        }
+
+        public void AOETurretTick()
+        {
             targetUpdateTimer += Time.deltaTime;
             if (targetUpdateTimer >= 0.2f)
             {
@@ -44,17 +91,32 @@ namespace TowerDefenseTK
                 UpdateTarget();
             }
 
-
             RotateToTarget();
-
 
             if (currentTarget != null &&
                 Time.time - lastFireTime >= 1f / towerData.fireRate)
             {
-                Shoot();
+                ShootProjectile();
                 lastFireTime = Time.time;
             }
         }
+
+        private void ShootProjectile()
+        {
+            if(currentTarget == null) return;
+
+        }
+
+        #endregion
+
+        private void SupportTick()
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+        #region Turret Func
 
         private void UpdateTarget()
         {
@@ -81,8 +143,28 @@ namespace TowerDefenseTK
             }
             else
             {
- 
                 targetDirection = transform.forward;
+            }
+        }
+
+
+
+        private void TurretTick()
+        {
+            targetUpdateTimer += Time.deltaTime;
+            if (targetUpdateTimer >= 0.2f)
+            {
+                targetUpdateTimer = 0f;
+                UpdateTarget();
+            }
+
+            RotateToTarget();
+
+            if (currentTarget != null &&
+                Time.time - lastFireTime >= 1f / towerData.fireRate)
+            {
+                ShootInstant();
+                lastFireTime = Time.time;
             }
         }
 
@@ -118,10 +200,10 @@ namespace TowerDefenseTK
             targetRotation = Quaternion.LookRotation(targetDirection);
         }
 
-        private void Shoot()
+        private void ShootInstant()
         {
             if (currentTarget == null) return;
-
+            damageComponent.TryDealDamage(currentTarget.gameObject);
             Debug.DrawLine(transform.position, currentTarget.transform.position, Color.red, 0.1f);
         }
 
@@ -152,5 +234,7 @@ namespace TowerDefenseTK
                 Gizmos.DrawWireSphere(transform.position, towerData.range);
             }
         }
+        #endregion
+
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using TowerDefenseTK;
 using UnityEngine;
 
-public class BaseEnemy : BaseUnit
+public class BaseEnemy : BaseUnit, IPoolable
 {
     [HideInInspector] public int nodesPassed;      
     [HideInInspector] public int totalPathNodes;   
@@ -17,5 +17,15 @@ public class BaseEnemy : BaseUnit
     private void OnDestroy()
     {
         EnemyManager.Instance.UnregisterEnemy(this);
+    }
+
+    public void OnSpawned()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public void OnDespawned()
+    {
+        throw new System.NotImplementedException();
     }
 }
