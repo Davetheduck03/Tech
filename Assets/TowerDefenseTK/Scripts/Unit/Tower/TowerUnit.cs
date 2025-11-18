@@ -6,11 +6,11 @@ namespace TowerDefenseTK
 {
     public class TowerUnit : BaseUnit
     {
-        [HideInInspector] public TowerSO towerSO;
         [SerializeField] private TowerWeapon t_Weapon;
         [SerializeField] private TowerBase t_Base;
-        public DamageComponent damageComponent;
         public HealthComponent healthComponent;
+
+        public TowerSO towerSO { get; private set; }
 
 
         protected override void Awake()
@@ -20,9 +20,8 @@ namespace TowerDefenseTK
                 towerSO = (TowerSO)unitData;
             }
             base.Awake();
-            damageComponent = GetComponent<DamageComponent>();
             healthComponent = GetComponent<HealthComponent>();
-            t_Weapon.Init();
+            t_Weapon.Init(this);
         }
 
     }

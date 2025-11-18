@@ -7,9 +7,6 @@ namespace TowerDefenseTK
 {
     public class TowerWeapon : MonoBehaviour
     {
-        [Header("Tower Data")]
-        [SerializeField] private TowerSO towerData;
-
         [Header("Rotation Settings")]
         [SerializeField] private float rotationSpeed = 10f;
         [SerializeField] private bool smoothRotation = true;
@@ -18,30 +15,26 @@ namespace TowerDefenseTK
         [SerializeField] private Transform shootingPoint;
 
         private TowerUnit parentTower;
+
+        // remove
         private BaseEnemy currentTarget;
+        private Vector3 targetDirection;
+        private Quaternion targetRotation;
+        public DamageComponent damageComponent;
+        // end
+
         private float lastFireTime;
         private float targetUpdateTimer;
 
-        private Vector3 targetDirection;
-        private Quaternion targetRotation;
-
-        public DamageComponent damageComponent;
-        public HealthComponent healthComponent;
-
-        public void Init()
+        public void Init(TowerUnit parent)
         {
-            parentTower = GetComponentInParent<TowerUnit>();
-            towerData ??= parentTower.towerSO;
-            damageComponent = parentTower.damageComponent;
-            healthComponent = parentTower.healthComponent;
-
-            if (shootingPoint == null)
-                shootingPoint = transform.Find("ShootingPoint") ?? transform;
+            parentTower = parent;
+            shootingPoint ??= transform;
         }
 
         private void Update()
         {
-            switch (towerData.towerType)
+            switch (parentTower.towerSO.towerType)
             {
                 case TowerType.Turret:
                     TurretTick();
@@ -67,7 +60,7 @@ namespace TowerDefenseTK
 
         private void AOETick()
         {
-            switch (towerData.AOEType)
+            switch (parentTower.towerSO.AOEType)
             {
                 case AOEType.Cone:
 
@@ -76,7 +69,7 @@ namespace TowerDefenseTK
 
                     break;
                 case AOEType.Turret_AOE:
-                    
+
                     break;
             }
 
@@ -94,7 +87,7 @@ namespace TowerDefenseTK
             RotateToTarget();
 
             if (currentTarget != null &&
-                Time.time - lastFireTime >= 1f / towerData.fireRate)
+                Time.time - lastFireTime >= 1f / parentTower.towerSO.fireRate)
             {
                 ShootProjectile();
                 lastFireTime = Time.time;
@@ -103,7 +96,7 @@ namespace TowerDefenseTK
 
         private void ShootProjectile()
         {
-            if(currentTarget == null) return;
+            if (currentTarget == null) return;
 
         }
 
@@ -122,14 +115,14 @@ namespace TowerDefenseTK
         {
             var newTarget = EnemyManager.Instance.GetTarget(
                 transform.position,
-                towerData.range,
-                towerData.towerTargetType,
-                towerData.targetGroup
+                parentTower.towerSO.range,
+                parentTower.towerSO.towerTargetType,
+                parentTower.towerSO.targetGroup
             );
 
             if (currentTarget != null &&
                 currentTarget.gameObject.activeInHierarchy &&
-                Vector3.Distance(currentTarget.transform.position, transform.position) <= towerData.range)
+                Vector3.Distance(currentTarget.transform.position, transform.position) <= parentTower.towerSO.range)
             {
                 return;
             }
@@ -138,7 +131,7 @@ namespace TowerDefenseTK
 
             if (currentTarget != null)
             {
-                Debug.Log($"New target: {currentTarget.name} ({towerData.towerTargetType})");
+                Debug.Log($"New target: {currentTarget.name} ({parentTower.towerSO.towerTargetType})");
                 UpdateRotationTarget();
             }
             else
@@ -161,7 +154,7 @@ namespace TowerDefenseTK
             RotateToTarget();
 
             if (currentTarget != null &&
-                Time.time - lastFireTime >= 1f / towerData.fireRate)
+                Time.time - lastFireTime >= 1f / parentTower.towerSO.fireRate)
             {
                 ShootInstant();
                 lastFireTime = Time.time;
@@ -211,10 +204,10 @@ namespace TowerDefenseTK
 
         private void OnDrawGizmosSelected()
         {
-            if (towerData == null) return;
+            if (parentTower.towerSO == null) return;
 
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, towerData.range);
+            Gizmos.DrawWireSphere(transform.position, parentTower.towerSO.range);
 
             if (currentTarget != null)
             {
@@ -223,15 +216,17 @@ namespace TowerDefenseTK
             }
 
             Gizmos.color = Color.cyan;
-            Gizmos.DrawRay(transform.position, targetDirection * towerData.range);
+            Gizmos.DrawRay(transform.position, targetDirection * parentTower.towerSO.range);
         }
 
         private void OnDrawGizmos()
         {
-            if (towerData != null)
+            if(parentTower == null)
+                parentTower = GetComponentInParent<TowerUnit>();
+            if (parentTower.towerSO != null)
             {
                 Gizmos.color = Color.yellow * 0.3f;
-                Gizmos.DrawWireSphere(transform.position, towerData.range);
+                Gizmos.DrawWireSphere(transform.position, parentTower.towerSO.range);
             }
         }
         #endregion

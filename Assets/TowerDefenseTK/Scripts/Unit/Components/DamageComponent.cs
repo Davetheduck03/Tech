@@ -18,12 +18,8 @@ public class DamageComponent : UnitComponent
     {
         if (target.TryGetComponent<HealthComponent>(out HealthComponent health))
         {
-            if (health.isDamagable)
-            {
-                DamageData damageData = new DamageData(damage, damageType, this.gameObject);
-                health.TakeDamage(damageData);
-            }
-            else return;
+            //DamageData damageData = new DamageData(damage, damageType, this.gameObject);
+            health.TakeDamage(damage, damageType);
         }
     }
 }

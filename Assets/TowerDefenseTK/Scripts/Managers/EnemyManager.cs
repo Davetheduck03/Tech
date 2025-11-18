@@ -119,6 +119,8 @@ namespace TowerDefenseTK
             float bestHp = -1f;
             foreach (var e in enemies)
             {
+
+               // tao get health trong code, khong get component the nay`
                 var hp = e.GetComponent<HealthComponent>();
                 if (hp != null && hp.currentHealth > bestHp)
                 {

@@ -15,15 +15,13 @@ public class HealthComponent : UnitComponent
         isDamagable = true;
     }
 
-    public void TakeDamage(DamageData data)
+    public void TakeDamage(float damage, DamageType damageType)
     {
         if (!isDamagable) return;
 
-        float baseAmount = data.amount;
-        float finalDamage = this.data.CalculateDamageTaken(baseAmount, data.damageType);
-        currentHealth -= finalDamage;
+        currentHealth -= data.CalculateDamageTaken(damage, damageType);
 
-        Debug.Log($"{gameObject.name} took {finalDamage} {data.damageType} damage. Remaining HP: {currentHealth}");
+        Debug.Log($"{gameObject.name} took {data.CalculateDamageTaken(damage, damageType)} {damageType} damage. Remaining HP: {currentHealth}");
         if (currentHealth <= 0)
         {
             Die();
