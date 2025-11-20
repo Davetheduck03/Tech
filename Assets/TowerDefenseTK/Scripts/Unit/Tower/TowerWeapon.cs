@@ -16,12 +16,12 @@ namespace TowerDefenseTK
 
         private TowerUnit parentTower;
 
-        // remove
+  
         private BaseEnemy currentTarget;
         private Vector3 targetDirection;
         private Quaternion targetRotation;
         public DamageComponent damageComponent;
-        // end
+  
 
         private float lastFireTime;
         private float targetUpdateTimer;
@@ -69,7 +69,7 @@ namespace TowerDefenseTK
 
                     break;
                 case AOEType.Turret_AOE:
-
+                    AOETurretTick();
                     break;
             }
 
@@ -97,7 +97,7 @@ namespace TowerDefenseTK
         private void ShootProjectile()
         {
             if (currentTarget == null) return;
-
+            PoolManager.Instance.Spawn("Projectile", shootingPoint.position, Quaternion.identity);
         }
 
         #endregion
@@ -199,8 +199,6 @@ namespace TowerDefenseTK
             damageComponent.TryDealDamage(currentTarget.gameObject);
             Debug.DrawLine(transform.position, currentTarget.transform.position, Color.red, 0.1f);
         }
-
-
 
         private void OnDrawGizmosSelected()
         {

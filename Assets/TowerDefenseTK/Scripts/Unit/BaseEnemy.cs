@@ -5,9 +5,9 @@ using UnityEngine;
 
 public class BaseEnemy : BaseUnit, IPoolable
 {
-    [HideInInspector] public int nodesPassed;      
-    [HideInInspector] public int totalPathNodes;   
-    [HideInInspector] public bool isFlying;        
+    [HideInInspector] public int nodesPassed;
+    [HideInInspector] public int totalPathNodes;
+    [HideInInspector] public bool isFlying;
 
     private void Start()
     {
@@ -21,11 +21,11 @@ public class BaseEnemy : BaseUnit, IPoolable
 
     public void OnSpawned()
     {
-        throw new System.NotImplementedException();
+        
     }
 
     public void OnDespawned()
     {
-        throw new System.NotImplementedException();
+        
     }
 }

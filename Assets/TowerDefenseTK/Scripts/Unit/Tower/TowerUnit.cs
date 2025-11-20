@@ -12,7 +12,6 @@ namespace TowerDefenseTK
 
         public TowerSO towerSO { get; private set; }
 
-
         protected override void Awake()
         {
             if (unitData is TowerSO)

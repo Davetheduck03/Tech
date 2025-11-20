@@ -10,7 +10,8 @@ namespace TowerDefenseTK
         void Start()
         {
             var customPath = this.gameObject.GetComponent<CustomPathHandler>();
-            Instantiate(enemy, this.transform.position, Quaternion.identity);
+            PoolManager.Instance.Spawn("Basic Enemy", this.transform.position, Quaternion.identity);
+            Debug.Log("Enemy spawned from pool");
             enemy.GetComponent<MovementComponent>().targetTransform = customPath.endGoal;
         }
     }
