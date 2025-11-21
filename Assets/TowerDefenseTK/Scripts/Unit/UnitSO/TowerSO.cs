@@ -19,7 +19,8 @@ public class TowerSO : UnitSO
     public TargetGroup targetGroup;
     public AOEType AOEType;
     public float projectileSpeed;
-    public GameObject projectilePrefab;
+    public float AOE_Radius;
+ 
 
     [Tooltip("Gold cost to build this tower.")]
     public int buildCost;

@@ -1,15 +1,19 @@
+using System;
+using TowerDefenseTK;
+using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
 public class BaseProjectile : MonoBehaviour, IPoolable
 {
     private float p_Speed;
-    private float p_Damage;
     private float p_AOERadius;
     [SerializeField] private LayerMask enemyLayer;
-    private float p_Lifetime;
+    private readonly float p_Lifetime = 5f;
     private float p_Timer;
-
+    private float updateTimer = 0.2f;
+    private BaseUnit target;
+    private TowerWeapon parent;
 
     public void OnDespawned()
     {
@@ -18,59 +22,58 @@ public class BaseProjectile : MonoBehaviour, IPoolable
 
     public void OnSpawned()
     {
-        
+        p_Timer = p_Lifetime;
+        Debug.Log("projectile spawned");
     }
 
-    //private void Update()
-    //{
-    //    if (target == null)
-    //    {
-    //        Despawn();
-    //        return;
-    //    }
+    public void Init(float speed, float AOE, BaseUnit target, TowerWeapon parent)
+    {
+        p_Speed = speed;
+        p_AOERadius = AOE;
+        this.target = target;
+        this.parent = parent;
+    }
 
-    //    // Move toward target
-    //    Vector3 dir = (target.transform.position - transform.position).normalized;
-    //    transform.position += dir * speed * Time.deltaTime;
+    private void Update()
+    {
+        MoveTowards(target.transform.position);
 
-    //    // Hit check
-    //    if (Vector3.Distance(transform.position, target.transform.position) < 0.3f)
-    //    {
-    //        Impact();
-    //    }
+        if (Vector3.Distance(transform.position, target.transform.position) < 0.3f)
+            Impact();
 
-    //    // Expire
-    //    lifeTimer += Time.deltaTime;
-    //    if (lifeTimer >= lifeTime)
-    //    {
-    //        Despawn();
-    //    }
-    //}
+        p_Timer -= Time.deltaTime;
+        if (p_Timer <= 0f)
+            Despawn();
+    }
 
-    //private void Impact()
-    //{
-    //    // AOE Damage
-    //    Collider[] hits = Physics.OverlapSphere(transform.position, aoeRadius, enemyLayer);
-    //    foreach (Collider hit in hits)
-    //    {
-    //        damageComp.TryDealDamage(hit.gameObject);
-    //    }
+    private void MoveTowards(Vector3 pos)
+    {
+        transform.position = Vector3.MoveTowards(transform.position, pos, p_Speed * Time.deltaTime);
+    }
 
-    //    // TODO: spawn impact effect (also from pool)
+    private void Impact()
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, p_AOERadius, enemyLayer);
+        foreach (Collider hit in hits)
+        {
+            parent.damageComponent.TryDealDamage(hit.gameObject);
+        }
 
-    //    Despawn();
-    //}
+        // TODO: spawn impact effect (also from pool)
+
+        Despawn();
+    }
 
     private void Despawn()
     {
         PoolManager.Instance.Despawn(gameObject);
     }
 
-    //private void OnDrawGizmosSelected()
-    //{
-    //    Gizmos.color = Color.red;
-    //    Gizmos.DrawWireSphere(transform.position, aoeRadius);
-    //}
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, p_AOERadius);
+    }
 }
 
 

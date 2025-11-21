@@ -16,7 +16,6 @@ namespace TowerDefenseTK
 
         private TowerUnit parentTower;
 
-  
         private BaseEnemy currentTarget;
         private Vector3 targetDirection;
         private Quaternion targetRotation;
@@ -90,6 +89,7 @@ namespace TowerDefenseTK
                 Time.time - lastFireTime >= 1f / parentTower.towerSO.fireRate)
             {
                 ShootProjectile();
+                Debug.Log("Has attempted to Shoot");
                 lastFireTime = Time.time;
             }
         }
@@ -97,7 +97,13 @@ namespace TowerDefenseTK
         private void ShootProjectile()
         {
             if (currentTarget == null) return;
-            PoolManager.Instance.Spawn("Projectile", shootingPoint.position, Quaternion.identity);
+            GameObject projectileOBJ = PoolManager.Instance.Spawn("Projectile", shootingPoint.position, Quaternion.identity);
+
+            BaseProjectile projectile = projectileOBJ.GetComponent<BaseProjectile>();
+            if (projectile == null) return;
+            {
+                projectile.Init(parentTower.towerSO.projectileSpeed, parentTower.towerSO.AOE_Radius, currentTarget, this);
+            }
         }
 
         #endregion

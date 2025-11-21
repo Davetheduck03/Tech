@@ -24,10 +24,11 @@ MonoBehaviour:
   defenseTypes: []
   armor: 0
   fireRate: 1
-  range: 7
-  isAoE: 0
-  projectileSpeed: 30
+  range: 10
   towerType: 1
   towerTargetType: 0
   targetGroup: 0
+  AOEType: 2
+  projectileSpeed: 50
+  AOE_Radius: 3
   buildCost: 120
