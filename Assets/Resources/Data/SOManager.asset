@@ -13,3 +13,10 @@ MonoBehaviour:
   m_Name: SOManager
   m_EditorClassIdentifier: 
   DamageTable: {fileID: 11400000, guid: 7338c39d063cff2458e271160712b668, type: 2}
+  towers:
+  - {fileID: 11400000, guid: b2253ea1ec04c0246bdee4800a4f638b, type: 2}
+  - {fileID: 11400000, guid: 212d02c02e1e6084ba40f0d9ed470f24, type: 2}
+  - {fileID: 11400000, guid: 07b75a1332ac31d47a7773c5a04b0a27, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

@@ -25,9 +25,10 @@ MonoBehaviour:
   armor: 0
   fireRate: 1.5
   range: 6
-  isAoE: 0
-  projectileSpeed: 50
   towerType: 0
   towerTargetType: 2
   targetGroup: 0
+  AOEType: 0
+  projectileSpeed: 50
+  AOE_Radius: 0
   buildCost: 50

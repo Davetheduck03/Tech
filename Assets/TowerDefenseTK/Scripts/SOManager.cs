@@ -1,3 +1,5 @@
+using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SOManager")]
@@ -15,4 +17,6 @@ public class SOManager : ScriptableObject
     }
 
     public DamageTable DamageTable;
+
+    public List<TowerSO> towers;
 }
