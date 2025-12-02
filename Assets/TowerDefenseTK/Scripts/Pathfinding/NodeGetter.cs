@@ -16,12 +16,12 @@ public class NodeGetter : MonoBehaviour
 
     private void OnEnable()
     {
-        GridGenerator.OnGridGenerated += Init;
+        PathNodeGenerator.OnGridGenerated += Init;
     }
 
     private void OnDisable()
     {
-        GridGenerator.OnGridGenerated -= Init;
+        PathNodeGenerator.OnGridGenerated -= Init;
     }
 
     private void Init()

@@ -14,12 +14,12 @@ public class CustomPathHandler : MonoBehaviour
 
     private void OnEnable()
     {
-        GridGenerator.OnGridGenerated += Init;
+        PathNodeGenerator.OnGridGenerated += Init;
     }
 
     private void OnDisable()
     {
-        GridGenerator.OnGridGenerated -= Init;
+        PathNodeGenerator.OnGridGenerated -= Init;
     }
 
     private void Init()
@@ -31,4 +31,27 @@ public class CustomPathHandler : MonoBehaviour
         pathNodes.Insert(0, startNode);
         Astar.Instance.customPathCache.Add((startNode, endNode), pathNodes);
     }
+
+    private void OnDrawGizmos()
+    {
+        if (pathNodes == null || pathNodes.Count == 0)
+            return;
+
+        Gizmos.color = Color.yellow;
+
+        foreach (var node in pathNodes)
+        {
+            if (node != null)
+                Gizmos.DrawSphere(node.transform.position, 0.2f);
+        }
+
+        for (int i = 0; i < pathNodes.Count - 1; i++)
+        {
+            if (pathNodes[i] != null && pathNodes[i + 1] != null)
+            {
+                Gizmos.DrawLine(pathNodes[i].transform.position, pathNodes[i + 1].transform.position);
+            }
+        }
+    }
+
 }

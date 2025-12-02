@@ -17,12 +17,12 @@ namespace TowerDefenseTK
 
         private void OnEnable()
         {
-            GridGenerator.OnGridGenerated += DelayComputePath;
+            PathNodeGenerator.OnGridGenerated += DelayComputePath;
         }
 
         private void OnDisable()
         {
-            GridGenerator.OnGridGenerated -= DelayComputePath;
+            PathNodeGenerator.OnGridGenerated -= DelayComputePath;
         }
 
         private void PrecomputeAllPaths()
