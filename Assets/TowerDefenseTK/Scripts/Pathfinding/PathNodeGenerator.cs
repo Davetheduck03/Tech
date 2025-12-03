@@ -48,10 +48,11 @@ namespace TowerDefenseTK
                 }
 
                 Vector3 spawnPos = gridNode.worldPos + new Vector3(
-                    gm.cellSize - 2,
+                    gm.cellSize / 2f,
                     0.75f,
-                    gm.cellSize - 2
+                    gm.cellSize / 2f
                 );
+
 
                 GameObject nodeObj = Instantiate(nodePrefab, spawnPos, Quaternion.identity, transform);
                 nodeObj.name = $"PathNode ({coords.x},{coords.y})";

@@ -21,9 +21,10 @@ public class TowerSO : UnitSO
     public float projectileSpeed;
     public float AOE_Radius;
  
-
     [Tooltip("Gold cost to build this tower.")]
     public int buildCost;
+
+    public GameObject previewPrefab;
 }
 
 public enum TowerType

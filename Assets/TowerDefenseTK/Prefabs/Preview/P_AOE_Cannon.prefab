@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4417122588679480845}
   - component: {fileID: 8755441520826775003}
   - component: {fileID: 2283026644894221589}
-  - component: {fileID: 7861700384267359383}
   m_Layer: 0
   m_Name: Base
   m_TagString: Untagged
@@ -41,7 +40,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3698647033451243543}
-  m_Mesh: {fileID: -3346267036829472625, guid: c976cc0c0db5d1743808abf23da6d6bd, type: 3}
+  m_Mesh: {fileID: -5775878351497708428, guid: b9435e5a30741fe4c962cf5af583f963, type: 3}
 --- !u!23 &2283026644894221589
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -87,18 +86,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7861700384267359383
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3698647033451243543}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88f75f7e8482fc84abf84819fce26031, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &4888151792330151402
 GameObject:
   m_ObjectHideFlags: 0
@@ -110,7 +97,6 @@ GameObject:
   - component: {fileID: 8775863940955230483}
   - component: {fileID: 1103045415764763056}
   - component: {fileID: 694900562168435471}
-  - component: {fileID: 1871703259406638194}
   m_Layer: 0
   m_Name: Weapon
   m_TagString: Untagged
@@ -141,7 +127,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4888151792330151402}
-  m_Mesh: {fileID: 1086180259802272699, guid: 7f89bc767f07e494b91d3479644e4d23, type: 3}
+  m_Mesh: {fileID: 8968814727005095688, guid: d9aa2890aac18a244a839332926e7877, type: 3}
 --- !u!23 &694900562168435471
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -165,7 +151,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -8469494145858465668, guid: cc97a6bc59c8cbc4b955c7a11a4a8876, type: 3}
+  - {fileID: -8469494145858465668, guid: e1e162f4d4d41424ca39d5aa007400d3, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -187,22 +173,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1871703259406638194
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4888151792330151402}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ef28dc03103a974fbe1c6dcb75f39df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rotationSpeed: 10
-  smoothRotation: 1
-  shootingPoint: {fileID: 1768631053351748373}
-  damageComponent: {fileID: 3290996741351681423}
 --- !u!1 &6811615284067369269
 GameObject:
   m_ObjectHideFlags: 0
@@ -212,10 +182,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8945953728980110933}
-  - component: {fileID: -5499238835861450326}
-  - component: {fileID: 3290996741351681423}
   m_Layer: 0
-  m_Name: Turret_2
+  m_Name: P_AOE_Cannon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -238,34 +206,6 @@ Transform:
   - {fileID: 8775863940955230483}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-5499238835861450326
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6811615284067369269}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5de44616f40188546ba0a5f10dcc5906, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  unitData: {fileID: 11400000, guid: 212d02c02e1e6084ba40f0d9ed470f24, type: 2}
-  t_Weapon: {fileID: 1871703259406638194}
-  t_Base: {fileID: 7861700384267359383}
-  healthComponent: {fileID: 0}
---- !u!114 &3290996741351681423
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6811615284067369269}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d9897a602b6500e45a7e40ac6cb91dd7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7594520113028294074
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UnitName: Turret Tower
   UnitPrefab: {fileID: 6811615284067369269, guid: 63c244fcf46e25641b9b2643d478e7e2, type: 3}
-  Icon: {fileID: 0}
+  Icon: {fileID: -8190126994305956915, guid: 025a102a56a8e824fa1e8c3708213584, type: 3}
   Health: 50
   Speed: 0
   goldReward: 0
@@ -32,3 +32,4 @@ MonoBehaviour:
   projectileSpeed: 50
   AOE_Radius: 0
   buildCost: 50
+  previewPrefab: {fileID: 6811615284067369269, guid: 432043f6a51636b4ba06078eb49a5158, type: 3}

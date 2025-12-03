@@ -6,7 +6,6 @@ using UnityEngine;
 
 public abstract class UnitSO : ScriptableObject
 {
-
     [Header("Basic Info")]
     public string UnitName;
     public GameObject UnitPrefab;
