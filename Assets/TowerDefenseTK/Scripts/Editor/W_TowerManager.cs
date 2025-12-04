@@ -122,6 +122,7 @@ public class TowerDataEditor : EditorWindow
         AssetDatabase.Refresh();
         Debug.Log($"[TowerDataEditor] Saved {towers.Count} towers from SOManager.");
     }
+
     private void DrawFloatRow(string label,
                          System.Func<TowerSO, float> getter,
                          System.Action<TowerSO, float> setter,
