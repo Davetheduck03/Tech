@@ -199,10 +199,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ef28dc03103a974fbe1c6dcb75f39df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  towerData: {fileID: 0}
   rotationSpeed: 10
   smoothRotation: 1
   shootingPoint: {fileID: 0}
+  damageComponent: {fileID: 0}
 --- !u!1 &6811615284067369269
 GameObject:
   m_ObjectHideFlags: 0
@@ -214,6 +214,7 @@ GameObject:
   - component: {fileID: 8945953728980110933}
   - component: {fileID: -5499238835861450326}
   - component: {fileID: 3290996741351681423}
+  - component: {fileID: 7720423631825398232}
   m_Layer: 0
   m_Name: Buff
   m_TagString: Untagged
@@ -251,9 +252,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unitData: {fileID: 11400000, guid: 07b75a1332ac31d47a7773c5a04b0a27, type: 2}
-  towerSO: {fileID: 0}
   t_Weapon: {fileID: 1871703259406638194}
   t_Base: {fileID: 7861700384267359383}
+  healthComponent: {fileID: 0}
 --- !u!114 &3290996741351681423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -266,6 +267,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9897a602b6500e45a7e40ac6cb91dd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &7720423631825398232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6811615284067369269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9ffe214f1db2cc4395e878f9f70349f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nodeLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  detectionRadius: 0.5
+  blockOnStart: 1
 --- !u!1 &7594520113028294074
 GameObject:
   m_ObjectHideFlags: 0

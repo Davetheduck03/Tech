@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace TowerDefenseTK
 {
+    /// <summary>
+    /// Purely handles movement along a path. All pathfinding logic is in Astar.
+    /// </summary>
     public class UnitPathFollower : MonoBehaviour
     {
         private List<PathNode> path;
@@ -11,38 +14,65 @@ namespace TowerDefenseTK
         private Coroutine followRoutine;
         private MovementComponent movementComp;
 
+        private void OnEnable()
+        {
+            // Register with Astar for path updates
+            if (Astar.Instance != null)
+            {
+                Astar.Instance.RegisterFollower(this);
+            }
+        }
+
+        private void OnDisable()
+        {
+            // Unregister from Astar
+            if (Astar.Instance != null)
+            {
+                Astar.Instance.UnregisterFollower(this);
+            }
+        }
+
         public void SetPath(List<PathNode> newPath, float moveSpeed, MovementComponent mc = null)
         {
+            // Only set path if it's valid
+            if (newPath == null || newPath.Count == 0)
+            {
+                Debug.LogWarning($"{gameObject.name}: Received invalid path!");
+                return;
+            }
+
             path = newPath;
             currentIndex = 0;
             movementComp = mc;
+
             StopAllCoroutines();
+            followRoutine = StartCoroutine(FollowPath(moveSpeed));
 
-            if (path != null && path.Count > 0)
-                followRoutine = StartCoroutine(FollowPath(moveSpeed));
-
-            Debug.Log("Path Started");
+            Debug.Log($"{gameObject.name}: Following path with {path.Count} nodes");
         }
 
         /// <summary>
-        /// Recalculates path from current position to the original goal.
+        /// Called by Astar when paths need to be updated due to obstacles
         /// </summary>
-        public void RecalculatePath(PathNode newGoal)
+        public void RequestPathUpdate()
         {
-            if (movementComp == null) return;
+            if (movementComp == null)
+            {
+                Debug.LogWarning($"{gameObject.name}: Cannot request path update - MovementComponent is null");
+                return;
+            }
 
-            PathNode currentNode = NodeGetter.GetNodeBelow(transform.position + Vector3.up * 0.5f,
-                                                           movementComp.nodeLayer);
-            if (currentNode == null || newGoal == null) return;
+            Debug.Log($"{gameObject.name}: Path update requested by Astar");
 
-            var newPath = Astar.Instance.FindPath(currentNode, newGoal);
-            SetPath(newPath, movementComp.movement_Speed, movementComp);
+            // Stop current movement
+            StopMovement();
+
+            // Request new path from MovementComponent
+            movementComp.OnTriggerMove();
         }
 
         private IEnumerator FollowPath(float moveSpeed)
         {
-            PathNode.OnNodeUpdated += HandleNodeBlocked;
-
             var enemy = GetComponent<BaseEnemy>();
             if (enemy != null)
             {
@@ -54,49 +84,57 @@ namespace TowerDefenseTK
             {
                 PathNode targetNode = path[currentIndex];
 
-                if (!targetNode.isWalkable)
+                // Safety check - if node becomes unwalkable, stop immediately
+                if (targetNode == null || !targetNode.isWalkable)
                 {
-                    PathNode goal = path[path.Count - 1];
-                    RecalculatePath(goal);
-                    yield break;
+                    Debug.LogWarning($"{gameObject.name}: Encountered blocked node at index {currentIndex}. Stopping movement.");
+                    yield break; // Stop moving, wait for Astar to reassign path
                 }
 
                 Vector3 targetPos = targetNode.transform.position;
 
+                // Move towards the target node
                 while (Vector3.Distance(transform.position, targetPos) > 0.15f)
                 {
-                    if (Physics.Raycast(transform.position + Vector3.up * 0.5f,
-                                        (targetPos - transform.position).normalized,
-                                        out RaycastHit hit, 1.5f, movementComp?.nodeLayer ?? 0))
+                    // Double-check during movement that target is still walkable
+                    if (!targetNode.isWalkable)
                     {
-                        PathNode blocked = hit.collider.GetComponent<PathNode>();
-                        if (blocked != null && !blocked.isWalkable)
-                        {
-                            RecalculatePath(path[path.Count - 1]);
-                            yield break;
-                        }
+                        Debug.LogWarning($"{gameObject.name}: Target node became blocked during movement!");
+                        yield break;
                     }
 
-                    transform.position = Vector3.MoveTowards(transform.position, targetPos,
-                                                            moveSpeed * Time.deltaTime);
+                    transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
                     yield return null;
                 }
 
+                // Reached this node, move to next
                 currentIndex++;
-
                 if (enemy != null)
                     enemy.nodesPassed = currentIndex;
             }
-            PathNode.OnNodeUpdated -= HandleNodeBlocked;
+
+            Debug.Log($"{gameObject.name}: Reached end of path");
         }
 
-        private void HandleNodeBlocked(PathNode blockedNode)
+        /// <summary>
+        /// Stop current movement
+        /// </summary>
+        public void StopMovement()
         {
-            if (path != null && currentIndex < path.Count && path.IndexOf(blockedNode, currentIndex) != -1)
+            if (followRoutine != null)
             {
-                PathNode goal = path[path.Count - 1];
-                RecalculatePath(goal);
+                StopCoroutine(followRoutine);
+                followRoutine = null;
             }
+        }
+
+        /// <summary>
+        /// Get current progress along path (0-1)
+        /// </summary>
+        public float GetPathProgress()
+        {
+            if (path == null || path.Count == 0) return 0f;
+            return currentIndex / (float)path.Count;
         }
     }
 }

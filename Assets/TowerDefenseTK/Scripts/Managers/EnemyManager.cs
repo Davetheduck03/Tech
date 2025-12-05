@@ -17,7 +17,6 @@ namespace TowerDefenseTK
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         public void RegisterEnemy(BaseEnemy e)

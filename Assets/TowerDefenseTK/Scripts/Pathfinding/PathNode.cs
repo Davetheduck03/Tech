@@ -13,6 +13,11 @@ public class PathNode : MonoBehaviour
     [HideInInspector] public float fCost => gCost + hCost;
     [HideInInspector] public PathNode parent;
 
+    public void NotifyNodeUpdated()
+    {
+        OnNodeUpdated?.Invoke(this);
+    }
+
     private bool _isWalkable = true;
     public bool isWalkable
     {
@@ -22,7 +27,7 @@ public class PathNode : MonoBehaviour
             if (_isWalkable != value)
             {
                 _isWalkable = value;
-                OnNodeUpdated?.Invoke(this);
+                NotifyNodeUpdated();
             }
         }
 

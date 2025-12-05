@@ -29,7 +29,6 @@ public class CustomPathHandler : MonoBehaviour
         endNode = NodeGetter.GetNodeBelow(endGoal.position + Vector3.up * 1f, nodeLayer);
         pathNodes.Add(endNode);
         pathNodes.Insert(0, startNode);
-        Astar.Instance.customPathCache.Add((startNode, endNode), pathNodes);
     }
 
     private void OnDrawGizmos()
