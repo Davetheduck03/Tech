@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GameInitializer : MonoBehaviour
 {
-    public DamageTable damageTable;
 
     private void Awake()
     {

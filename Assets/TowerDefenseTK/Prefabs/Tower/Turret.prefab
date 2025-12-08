@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8755441520826775003}
   - component: {fileID: 2283026644894221589}
   - component: {fileID: 7861700384267359383}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Base
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 1103045415764763056}
   - component: {fileID: 694900562168435471}
   - component: {fileID: 1871703259406638194}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Weapon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -201,6 +201,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rotationSpeed: 10
   smoothRotation: 1
+  recoilDistance: 0.3
+  recoilRecoverySpeed: 10
   shootingPoint: {fileID: 1768631053351748373}
   damageComponent: {fileID: 3290996741351681423}
 --- !u!1 &6811615284067369269
@@ -215,7 +217,9 @@ GameObject:
   - component: {fileID: -5499238835861450326}
   - component: {fileID: 3290996741351681423}
   - component: {fileID: 2357637866067864958}
-  m_Layer: 0
+  - component: {fileID: 6301146754411314225}
+  - component: {fileID: 4143807282327796584}
+  m_Layer: 7
   m_Name: Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -284,6 +288,42 @@ MonoBehaviour:
     m_Bits: 64
   detectionRadius: 0.5
   blockOnStart: 1
+--- !u!114 &6301146754411314225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6811615284067369269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1069075e80246e84c98fd31557cb7354, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  upgradeData: {fileID: 11400000, guid: 176dc76fcc004254da15003d4925ee1e, type: 2}
+  killCount: 0
+  totalDamageDealt: 0
+--- !u!65 &4143807282327796584
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6811615284067369269}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2, z: 2}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &7594520113028294074
 GameObject:
   m_ObjectHideFlags: 0
@@ -293,7 +333,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1768631053351748373}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ShootingPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}

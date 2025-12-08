@@ -24,6 +24,9 @@ public class TowerPlacementController : MonoBehaviour
     private bool isValidPlacement;
     private List<PathNode> temporarilyBlockedNodes = new List<PathNode>();
 
+    // Public property to check if in placement mode
+    public bool IsPlacingTower => selectedTower != null;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -281,6 +284,10 @@ public class TowerPlacementController : MonoBehaviour
         CurrencyManager.Instance.TrySpend(selectedTower.buildCost);
         Instantiate(selectedTower.UnitPrefab, centerPos, Quaternion.identity);
         gm.SetCellOccupied(gridPos, true);
+
+        // Exit placement state after successful placement
+        Debug.Log($"Tower '{selectedTower.UnitName}' placed successfully! Exiting placement mode.");
+        CancelPlacement();
     }
 
     private bool GetGroundPosition(out Vector3 hitPoint)

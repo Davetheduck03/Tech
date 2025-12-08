@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8755441520826775003}
   - component: {fileID: 2283026644894221589}
   - component: {fileID: 7861700384267359383}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Base
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -8469494145858465668, guid: e2d36151d394d8142ad7d0b1062830c7, type: 3}
+  - {fileID: 6842584044724275946, guid: d056b543ff1b6954585f72a631726c07, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 1103045415764763056}
   - component: {fileID: 694900562168435471}
   - component: {fileID: 1871703259406638194}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Weapon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -165,7 +165,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -8469494145858465668, guid: e2d36151d394d8142ad7d0b1062830c7, type: 3}
+  - {fileID: 6842584044724275946, guid: a7a3487fc86057c43ad68ed8476705d8, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -201,6 +201,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rotationSpeed: 10
   smoothRotation: 1
+  recoilDistance: 0.3
+  recoilRecoverySpeed: 10
   shootingPoint: {fileID: 0}
   damageComponent: {fileID: 0}
 --- !u!1 &6811615284067369269
@@ -214,9 +216,11 @@ GameObject:
   - component: {fileID: 8945953728980110933}
   - component: {fileID: -5499238835861450326}
   - component: {fileID: 3290996741351681423}
-  - component: {fileID: 7720423631825398232}
-  m_Layer: 0
-  m_Name: Buff
+  - component: {fileID: 1098720209337086681}
+  - component: {fileID: 4116844815310616003}
+  - component: {fileID: 2964029853167126392}
+  m_Layer: 7
+  m_Name: Mine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -267,7 +271,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9897a602b6500e45a7e40ac6cb91dd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &7720423631825398232
+--- !u!114 &1098720209337086681
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -284,6 +288,42 @@ MonoBehaviour:
     m_Bits: 64
   detectionRadius: 0.5
   blockOnStart: 1
+--- !u!114 &4116844815310616003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6811615284067369269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1069075e80246e84c98fd31557cb7354, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  upgradeData: {fileID: 0}
+  killCount: 0
+  totalDamageDealt: 0
+--- !u!65 &2964029853167126392
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6811615284067369269}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2, z: 2}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1 &7594520113028294074
 GameObject:
   m_ObjectHideFlags: 0
@@ -293,7 +333,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1768631053351748373}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ShootingPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}

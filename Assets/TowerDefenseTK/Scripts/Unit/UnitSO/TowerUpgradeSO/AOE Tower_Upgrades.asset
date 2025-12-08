@@ -9,9 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34a4085f54ad34b469d23fb27deb484b, type: 3}
-  m_Name: TowerDatabase
+  m_Script: {fileID: 11500000, guid: bc00cae00d3822540a2604cf49eb14ba, type: 3}
+  m_Name: AOE Tower_Upgrades
   m_EditorClassIdentifier: 
-  towers:
-  - {fileID: 11400000, guid: b2253ea1ec04c0246bdee4800a4f638b, type: 2}
-  - {fileID: 11400000, guid: 07b75a1332ac31d47a7773c5a04b0a27, type: 2}
+  baseTower: {fileID: 11400000, guid: b2253ea1ec04c0246bdee4800a4f638b, type: 2}
+  upgradeOptions: []
+  canSell: 1
+  sellValuePercent: 75
