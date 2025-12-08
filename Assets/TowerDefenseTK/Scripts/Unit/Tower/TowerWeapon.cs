@@ -11,6 +11,13 @@ namespace TowerDefenseTK
         [SerializeField] private float rotationSpeed = 10f;
         [SerializeField] private bool smoothRotation = true;
 
+        [Header("Recoil Settings")]
+        [SerializeField] private float recoilDistance = 0.3f;
+        [SerializeField] private float recoilRecoverySpeed = 10f;
+
+        private Vector3 originalLocalPosition;
+        private float currentRecoil;
+
         [Header("Muzzle (Optional)")]
         [SerializeField] private Transform shootingPoint;
 
@@ -29,6 +36,7 @@ namespace TowerDefenseTK
         {
             parentTower = parent;
             shootingPoint ??= transform;
+            originalLocalPosition = transform.localPosition;
         }
 
         private void Update()
@@ -36,12 +44,14 @@ namespace TowerDefenseTK
             switch (parentTower.towerSO.towerType)
             {
                 case TowerType.Turret:
+                    HandleRecoil();
                     TurretTick();
                     break;
                 case TowerType.Support:
                     SupportTick();
                     break;
                 case TowerType.AoE:
+                    HandleRecoil();
                     AOETick();
                     break;
                 case TowerType.Resource:
@@ -89,7 +99,7 @@ namespace TowerDefenseTK
                 Time.time - lastFireTime >= 1f / parentTower.towerSO.fireRate)
             {
                 ShootProjectile();
-                Debug.Log("Has attempted to Shoot");
+                TriggerRecoil();
                 lastFireTime = Time.time;
             }
         }
@@ -115,6 +125,21 @@ namespace TowerDefenseTK
             throw new NotImplementedException();
         }
 
+        #region Recoil
+
+        private void HandleRecoil()
+        {
+            currentRecoil = Mathf.Lerp(currentRecoil, 0f, recoilRecoverySpeed * Time.deltaTime);
+
+            transform.localPosition = originalLocalPosition - transform.localRotation * Vector3.forward * currentRecoil;
+        }
+
+        private void TriggerRecoil()
+        {
+            currentRecoil = recoilDistance;
+        }
+
+        #endregion
 
 
         #region Turret Func
@@ -206,6 +231,7 @@ namespace TowerDefenseTK
             if (currentTarget == null) return;
             damageComponent.TryDealDamage(currentTarget.gameObject);
             Debug.DrawLine(transform.position, currentTarget.transform.position, Color.red, 0.1f);
+            TriggerRecoil();
         }
 
         private void OnDrawGizmosSelected()

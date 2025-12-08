@@ -17,6 +17,8 @@ public class GridManager : MonoBehaviour
     private Dictionary<Vector2Int, GridNode> grid = new Dictionary<Vector2Int, GridNode>();
     private List<LineRenderer> gridLines = new List<LineRenderer>();
 
+    private Vector3 Origin => transform.position;
+
     private void Awake()
     {
         Instance = this;
@@ -43,15 +45,16 @@ public class GridManager : MonoBehaviour
 
     public Vector3 GridToWorld(Vector2Int coords)
     {
-        return new Vector3(coords.x * cellSize, 0f, coords.y * cellSize);
+        return Origin + new Vector3(coords.x * cellSize, 0f, coords.y * cellSize);
     }
 
     public bool TryGetNode(Vector2Int coords, out GridNode node) => grid.TryGetValue(coords, out node);
 
     public Vector2Int WorldToGrid(Vector3 world)
     {
-        int x = Mathf.FloorToInt(world.x / cellSize);
-        int y = Mathf.FloorToInt(world.z / cellSize);
+        Vector3 local = world - Origin;
+        int x = Mathf.FloorToInt(local.x / cellSize);
+        int y = Mathf.FloorToInt(local.z / cellSize);
         return new Vector2Int(x, y);
     }
 
@@ -88,11 +91,24 @@ public class GridManager : MonoBehaviour
         lineObj.transform.parent = transform;
 
         LineRenderer lr = lineObj.AddComponent<LineRenderer>();
-        lr.material = lineMaterial != null ? lineMaterial : new Material(Shader.Find("Sprites/Default"));
+
+        if (lineMaterial != null)
+        {
+            lr.material = lineMaterial;
+        }
+        else
+        {
+            lr.material = new Material(Shader.Find("Unlit/Color"));
+            lr.material.color = Color.white;
+        }
+
+        lr.startColor = Color.white;
+        lr.endColor = Color.white;
         lr.widthMultiplier = 0.05f;
         lr.positionCount = 2;
-        lr.SetPosition(0, start + Vector3.up * 0.01f); // slight offset so it doesn't z-fight with floor
-        lr.SetPosition(1, end + Vector3.up * 0.01f);
+        lr.SetPosition(0, start + Vector3.up * 0.1f);
+        lr.SetPosition(1, end + Vector3.up * 0.1f);
+        lr.useWorldSpace = true;
         lr.loop = false;
 
         gridLines.Add(lr);
@@ -106,7 +122,7 @@ public class GridManager : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                Vector3 bottomLeft = new Vector3(x * cellSize, 0.01f, y * cellSize);
+                Vector3 bottomLeft = Origin + new Vector3(x * cellSize, 0.01f, y * cellSize);
                 Vector3 bottomRight = bottomLeft + new Vector3(cellSize, 0, 0);
                 Vector3 topRight = bottomLeft + new Vector3(cellSize, 0, cellSize);
                 Vector3 topLeft = bottomLeft + new Vector3(0, 0, cellSize);
@@ -118,5 +134,4 @@ public class GridManager : MonoBehaviour
             }
         }
     }
-
 }

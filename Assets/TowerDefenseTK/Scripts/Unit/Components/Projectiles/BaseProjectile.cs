@@ -9,7 +9,7 @@ public class BaseProjectile : MonoBehaviour, IPoolable
     private float p_Speed;
     private float p_AOERadius;
     [SerializeField] private LayerMask enemyLayer;
-    private readonly float p_Lifetime = 5f;
+    private readonly float p_Lifetime = 3f;
     private float p_Timer;
     private float updateTimer = 0.2f;
     private BaseUnit target;
