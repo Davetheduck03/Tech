@@ -19,6 +19,13 @@ namespace TowerDefenseTK
         // Event for when paths are recalculated
         public event System.Action OnPathsRecalculated;
 
+
+
+        [SerializeField] private EnemySpawner spawner; // Placeholder for Showcase purposes
+
+
+
+
         private void OnEnable()
         {
             PathNodeGenerator.OnGridGenerated += DelayComputePath;
@@ -66,6 +73,7 @@ namespace TowerDefenseTK
             }
 
             Debug.Log($"Precomputation complete. Total paths: {generatedPathCache.Count}");
+            spawner.Init();
         }
 
         private void DelayComputePath()

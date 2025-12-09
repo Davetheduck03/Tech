@@ -42,7 +42,7 @@ public class BaseProjectile : MonoBehaviour, IPoolable
             Impact();
 
         p_Timer -= Time.deltaTime;
-        if (p_Timer <= 0f)
+        if (p_Timer <= 0f || target.transform.position == null)
             Despawn();
     }
 

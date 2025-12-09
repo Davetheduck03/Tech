@@ -64,6 +64,6 @@ public class HealthComponent : UnitComponent
 
     private void Die()
     {
-        Destroy(gameObject);
+        PoolManager.Instance.Despawn(gameObject);
     }
 }

@@ -23,3 +23,4 @@ MonoBehaviour:
   isTargetable: 1
   defenseTypes: []
   armor: 0
+  isFlying: 0

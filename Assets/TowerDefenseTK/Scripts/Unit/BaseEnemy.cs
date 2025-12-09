@@ -9,23 +9,22 @@ public class BaseEnemy : BaseUnit, IPoolable
     [HideInInspector] public int totalPathNodes;
     [HideInInspector] public bool isFlying;
 
-    private void Start()
+
+    public void OnSpawned()
     {
         EnemyManager.Instance.RegisterEnemy(this);
     }
 
-    private void OnDestroy()
+    public void OnDespawned()
     {
         EnemyManager.Instance.UnregisterEnemy(this);
     }
 
-    public void OnSpawned()
+    private void OnTriggerEnter(Collider collision)
     {
-        
-    }
-
-    public void OnDespawned()
-    {
-        
+        if (collision.gameObject.CompareTag("End"))
+        {
+            PoolManager.Instance.Despawn(gameObject);
+        }
     }
 }

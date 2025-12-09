@@ -9,43 +9,67 @@ namespace TowerDefenseTK
         [SerializeField] private string enemyPoolName = "Basic Enemy";
         [SerializeField] private int enemiesToSpawn = 5;
         [SerializeField] private float spawnInterval = 0.5f;
+        [SerializeField] private float waveCooldown = 10f;
         [SerializeField] private bool spawnOnStart = true;
 
-        void Start()
+        private int currentWave = 1;
+        private bool isSpawning = false;
+
+        public void Init()
         {
             if (spawnOnStart)
             {
-                StartCoroutine(SpawnEnemies());
+                StartCoroutine(SpawnWaves());
             }
         }
 
-        private IEnumerator SpawnEnemies()
+        /// <summary>
+        /// Main infinite wave loop
+        /// </summary>
+        private IEnumerator SpawnWaves()
         {
-            Debug.Log($"Starting to spawn {enemiesToSpawn} enemies with {spawnInterval}s interval");
+            isSpawning = true;
 
+            while (true)
+            {
+                Debug.Log($"--- Wave {currentWave} starting ---");
+
+                yield return StartCoroutine(SpawnWaveEnemies());
+
+                Debug.Log($"--- Wave {currentWave} finished. Waiting {waveCooldown}s ---");
+
+                yield return new WaitForSeconds(waveCooldown);
+
+                currentWave++;
+            }
+        }
+
+        /// <summary>
+        /// Spawn all enemies inside a single wave
+        /// </summary>
+        private IEnumerator SpawnWaveEnemies()
+        {
             for (int i = 0; i < enemiesToSpawn; i++)
             {
                 SpawnEnemy(i);
 
-                // Wait before spawning the next enemy (except after the last one)
                 if (i < enemiesToSpawn - 1)
-                {
                     yield return new WaitForSeconds(spawnInterval);
-                }
             }
-
-            Debug.Log($"Finished spawning {enemiesToSpawn} enemies");
         }
 
         private void SpawnEnemy(int index)
         {
-            GameObject spawnedEnemy = PoolManager.Instance.Spawn(enemyPoolName, transform.position, Quaternion.identity);
+            GameObject spawnedEnemy = PoolManager.Instance.Spawn(
+                enemyPoolName,
+                transform.position,
+                Quaternion.identity
+            );
 
             if (spawnedEnemy != null)
             {
-                Debug.Log($"Enemy {index + 1}/{enemiesToSpawn} spawned from pool");
+                Debug.Log($"Enemy {index + 1}/{enemiesToSpawn} spawned in Wave {currentWave}");
 
-                // Trigger movement if the enemy has a MovementComponent
                 MovementComponent movementComp = spawnedEnemy.GetComponent<MovementComponent>();
                 if (movementComp != null)
                 {
@@ -59,36 +83,14 @@ namespace TowerDefenseTK
         }
 
         /// <summary>
-        /// Manually trigger spawning (can be called from buttons, etc.)
+        /// Start waves manually from UI
         /// </summary>
         public void TriggerSpawn()
         {
-            StartCoroutine(SpawnEnemies());
-        }
-
-        /// <summary>
-        /// Spawn a custom number of enemies
-        /// </summary>
-        public void SpawnCustomAmount(int amount)
-        {
-            StartCoroutine(SpawnCustomEnemies(amount));
-        }
-
-        private IEnumerator SpawnCustomEnemies(int amount)
-        {
-            Debug.Log($"Starting to spawn {amount} enemies with {spawnInterval}s interval");
-
-            for (int i = 0; i < amount; i++)
+            if (!isSpawning)
             {
-                SpawnEnemy(i);
-
-                if (i < amount - 1)
-                {
-                    yield return new WaitForSeconds(spawnInterval);
-                }
+                StartCoroutine(SpawnWaves());
             }
-
-            Debug.Log($"Finished spawning {amount} enemies");
         }
     }
 }
