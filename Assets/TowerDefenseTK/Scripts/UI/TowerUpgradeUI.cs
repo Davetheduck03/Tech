@@ -118,7 +118,8 @@ namespace TowerDefenseTK
             TextMeshProUGUI[] texts = buttonObj.GetComponentsInChildren<TextMeshProUGUI>();
             if (texts.Length > 0)
             {
-                texts[0].text = $"{upgrade.upgradedTower.UnitName}\n{upgrade.upgradeCost} ";
+                texts[0].text = $"{upgrade.upgradedTower.UnitName}";
+                texts[1].text = "Upgrade Cost: " + "$ " + upgrade.upgradeCost;
             }
 
             // Set upgrade icon if available

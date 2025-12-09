@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
+using TowerDefenseTK;
 
 [CreateAssetMenu(fileName = "SOManager")]
 public class SOManager : ScriptableObject

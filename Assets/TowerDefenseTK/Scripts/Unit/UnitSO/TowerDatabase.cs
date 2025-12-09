@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "TowerDatabase", menuName = "TD Toolkit/Database/Tower Database")]
-public class TowerDatabase : ScriptableObject
+namespace TowerDefenseTK
 {
-    public List<TowerSO> towers;
+    [CreateAssetMenu(fileName = "TowerDatabase", menuName = "TD Toolkit/Database/Tower Database")]
+    public class TowerDatabase : ScriptableObject
+    {
+        public List<TowerSO> towers;
+    }
 }

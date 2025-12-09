@@ -1,29 +1,32 @@
 using UnityEngine;
 
-public class TowerSelectionUI : MonoBehaviour
+namespace TowerDefenseTK
 {
-    [SerializeField] private TowerDatabase database;
-    [SerializeField] private GameObject buttonPrefab;
-    [SerializeField] private Transform buttonContainer;
-    private TowerSO currentTower;
-
-    void Start()
+    public class TowerSelectionUI : MonoBehaviour
     {
-        GenerateButtons();
-    }
+        [SerializeField] private TowerDatabase database;
+        [SerializeField] private GameObject buttonPrefab;
+        [SerializeField] private Transform buttonContainer;
+        private TowerSO currentTower;
 
-    void GenerateButtons()
-    {
-        foreach (TowerSO tower in database.towers)
+        void Start()
         {
-            GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);
-            TowerUIButton button = btnObj.GetComponent<TowerUIButton>();
-            button.Init(tower, this);
+            GenerateButtons();
         }
-    }
 
-    public void SelectTower(TowerSO tower)
-    {
-        TowerPlacementController.Instance.SetTowerToPlace(tower);
+        void GenerateButtons()
+        {
+            foreach (TowerSO tower in database.towers)
+            {
+                GameObject btnObj = Instantiate(buttonPrefab, buttonContainer);
+                TowerUIButton button = btnObj.GetComponent<TowerUIButton>();
+                button.Init(tower, this);
+            }
+        }
+
+        public void SelectTower(TowerSO tower)
+        {
+            TowerPlacementController.Instance.SetTowerToPlace(tower);
+        }
     }
 }
