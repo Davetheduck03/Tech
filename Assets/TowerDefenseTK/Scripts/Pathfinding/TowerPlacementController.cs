@@ -113,6 +113,20 @@ public class TowerPlacementController : MonoBehaviour
         Vector3 centerPos = node.worldPos + new Vector3(gm.cellSize / 2f, 0f, gm.cellSize / 2f);
         previewObject.transform.position = centerPos;
 
+        MapLoader mapLoader = FindFirstObjectByType<MapLoader>();
+        if (mapLoader != null)
+        {
+            TileType tileType = mapLoader.GetTileTypeAtPosition(centerPos);
+
+            // Can only build on Empty or Buildable tiles
+            if (tileType != TileType.Empty && tileType != TileType.Buildable)
+            {
+                SetPreviewColor(Color.red);
+                isValidPlacement = false;
+                return;
+            }
+        }
+
         // Check if cell is occupied
         if (node.occupied)
         {
