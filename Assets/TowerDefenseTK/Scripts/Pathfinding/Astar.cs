@@ -8,36 +8,48 @@ namespace TowerDefenseTK
     public class Astar : MonoBehaviour
     {
         public static Astar Instance;
-        private void Awake() => Instance = this;
+
+        [Header("References")]
+        [SerializeField] private EnemySpawner spawner;
+
+        [Header("Debug")]
+        [SerializeField] private bool logPathfinding = true;
 
         public List<PathNode> allNodes = new List<PathNode>();
         public Dictionary<(PathNode, PathNode), List<PathNode>> generatedPathCache = new Dictionary<(PathNode, PathNode), List<PathNode>>();
 
-        // Track all active path followers for recalculation
         private HashSet<UnitPathFollower> activeFollowers = new HashSet<UnitPathFollower>();
 
-        // Event for when paths are recalculated
         public event System.Action OnPathsRecalculated;
 
-
-
-        [SerializeField] private EnemySpawner spawner; // Placeholder for Showcase purposes
-
-
-
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         private void OnEnable()
         {
-            PathNodeGenerator.OnGridGenerated += DelayComputePath;
+            PathNodeGenerator.OnGridGenerated += OnGridGenerated;
         }
 
         private void OnDisable()
         {
-            PathNodeGenerator.OnGridGenerated -= DelayComputePath;
+            PathNodeGenerator.OnGridGenerated -= OnGridGenerated;
+        }
+
+        private void OnGridGenerated()
+        {
+            StartCoroutine(DelayedPathComputation());
+        }
+
+        private IEnumerator DelayedPathComputation()
+        {
+            yield return new WaitForEndOfFrame();
+            PrecomputeAllPaths();
         }
 
         /// <summary>
-        /// Register a path follower to be managed by Astar
+        /// Register a path follower to receive path updates
         /// </summary>
         public void RegisterFollower(UnitPathFollower follower)
         {
@@ -52,9 +64,25 @@ namespace TowerDefenseTK
             activeFollowers.Remove(follower);
         }
 
+        /// <summary>
+        /// Precompute paths between all spawn and exit points
+        /// </summary>
         private void PrecomputeAllPaths()
         {
-            Debug.Log("Precomputing all paths...");
+            if (logPathfinding)
+                Debug.Log("Astar: Precomputing all paths...");
+
+            generatedPathCache.Clear();
+
+            if (!NodeGetter.nodeValue.ContainsKey(NodeType.Start) ||
+                !NodeGetter.nodeValue.ContainsKey(NodeType.End))
+            {
+                Debug.LogWarning("Astar: No spawn or exit points registered!");
+                return;
+            }
+
+            int successCount = 0;
+            int failCount = 0;
 
             foreach (var startNode in NodeGetter.nodeValue[NodeType.Start])
             {
@@ -63,32 +91,34 @@ namespace TowerDefenseTK
                     if (startNode != null && endNode != null)
                     {
                         var path = FindPath(startNode, endNode);
-                        if (path != null)
+                        if (path != null && path.Count > 0)
                         {
                             generatedPathCache[(startNode, endNode)] = path;
-                            Debug.Log($"Precomputed path from {startNode.name} to {endNode.name}: {path.Count} nodes");
+                            successCount++;
+
+                            if (logPathfinding)
+                                Debug.Log($"Astar: ✓ Path {startNode.name} → {endNode.name}: {path.Count} nodes");
+                        }
+                        else
+                        {
+                            failCount++;
+                            Debug.LogWarning($"Astar: ✗ No path from {startNode.name} to {endNode.name}");
                         }
                     }
                 }
             }
 
-            Debug.Log($"Precomputation complete. Total paths: {generatedPathCache.Count}");
-            spawner.Init();
-        }
+            Debug.Log($"Astar: Precomputation complete. Success: {successCount}, Failed: {failCount}");
 
-        private void DelayComputePath()
-        {
-            StartCoroutine(C_DelayComputePath());
-        }
-
-        private IEnumerator C_DelayComputePath()
-        {
-            yield return new WaitForEndOfFrame();
-            PrecomputeAllPaths();
+            // Initialize spawner if present
+            if (spawner != null)
+            {
+                spawner.Init();
+            }
         }
 
         /// <summary>
-        /// Get a cached path or compute a new one
+        /// Get a path from cache or compute new one
         /// </summary>
         public List<PathNode> GetPath(PathNode start, PathNode goal)
         {
@@ -97,34 +127,69 @@ namespace TowerDefenseTK
             var key = (start, goal);
 
             // Check cache first
-            if (generatedPathCache.ContainsKey(key))
+            if (generatedPathCache.TryGetValue(key, out List<PathNode> cachedPath))
             {
-                List<PathNode> cachedPath = generatedPathCache[key];
-
-                // Validate the cached path - check if all nodes are walkable
                 if (IsPathValid(cachedPath))
                 {
-                    return cachedPath;
+                    return new List<PathNode>(cachedPath); // Return a copy
                 }
-                else
+
+                // Cache invalid, recalculate
+                if (logPathfinding)
+                    Debug.Log($"Astar: Cached path invalid, recalculating {start.name} → {goal.name}");
+
+                List<PathNode> newPath = FindPath(start, goal);
+                if (newPath != null)
                 {
-                    // Path is invalid, recalculate
-                    Debug.Log($"Cached path invalid, recalculating from {start.name} to {goal.name}");
-                    List<PathNode> newPath = FindPath(start, goal);
-                    if (newPath != null)
-                    {
-                        generatedPathCache[key] = newPath;
-                    }
-                    return newPath;
+                    generatedPathCache[key] = newPath;
                 }
+                return newPath;
             }
 
-            // Not in cache, calculate new path
+            // Not in cache, calculate
             return FindPath(start, goal);
         }
 
         /// <summary>
-        /// Check if a path is valid (all nodes are walkable)
+        /// Check if placing a tower at coords would block all paths
+        /// </summary>
+        public bool WouldBlockAllPaths(Vector2Int coords)
+        {
+            PathNode nodeToBlock = PathNodeGenerator.Instance?.GetNodeAt(coords);
+            if (nodeToBlock == null) return false;
+
+            // Temporarily mark as unwalkable
+            bool originalWalkable = nodeToBlock.isWalkable;
+            nodeToBlock.isWalkable = false;
+
+            bool anyPathExists = false;
+
+            // Check if any path still exists
+            foreach (var startNode in NodeGetter.nodeValue[NodeType.Start])
+            {
+                foreach (var endNode in NodeGetter.nodeValue[NodeType.End])
+                {
+                    if (startNode != null && endNode != null)
+                    {
+                        var testPath = FindPath(startNode, endNode);
+                        if (testPath != null && testPath.Count > 0)
+                        {
+                            anyPathExists = true;
+                            break;
+                        }
+                    }
+                }
+                if (anyPathExists) break;
+            }
+
+            // Restore original state
+            nodeToBlock.isWalkable = originalWalkable;
+
+            return !anyPathExists;
+        }
+
+        /// <summary>
+        /// Check if a path is valid (all nodes walkable)
         /// </summary>
         private bool IsPathValid(List<PathNode> path)
         {
@@ -135,16 +200,21 @@ namespace TowerDefenseTK
                 if (node == null || !node.isWalkable)
                     return false;
             }
-
             return true;
         }
 
+        /// <summary>
+        /// A* pathfinding algorithm
+        /// </summary>
         public List<PathNode> FindPath(PathNode start, PathNode goal)
         {
-            var openSet = new List<PathNode>();
-            var closedSet = new HashSet<PathNode>();
-            openSet.Add(start);
+            if (start == null || goal == null) return null;
+            if (!start.isWalkable || !goal.isWalkable) return null;
 
+            var openSet = new List<PathNode> { start };
+            var closedSet = new HashSet<PathNode>();
+
+            // Reset costs
             foreach (var node in allNodes)
             {
                 node.gCost = Mathf.Infinity;
@@ -157,12 +227,12 @@ namespace TowerDefenseTK
 
             while (openSet.Count > 0)
             {
-                var current = openSet.OrderBy(n => n.fCost).First();
+                // Get node with lowest fCost
+                PathNode current = openSet.OrderBy(n => n.fCost).ThenBy(n => n.hCost).First();
 
                 if (current == goal)
                 {
-                    var path = ReconstructPath(start, goal);
-                    return path;
+                    return ReconstructPath(start, goal);
                 }
 
                 openSet.Remove(current);
@@ -173,7 +243,7 @@ namespace TowerDefenseTK
                     if (closedSet.Contains(neighbor) || !neighbor.isWalkable)
                         continue;
 
-                    float tentativeG = current.gCost + Vector3.Distance(current.transform.position, neighbor.transform.position);
+                    float tentativeG = current.gCost + GetMovementCost(current, neighbor);
 
                     if (tentativeG < neighbor.gCost)
                     {
@@ -187,13 +257,21 @@ namespace TowerDefenseTK
                 }
             }
 
-            Debug.LogWarning($"No path found from {start.name} to {goal.name}");
-            return null;
+            return null; // No path found
         }
 
         private float Heuristic(PathNode a, PathNode b)
         {
-            return Vector3.Distance(a.transform.position, b.transform.position);
+            // Manhattan distance for grid-based movement
+            return Mathf.Abs(a.gridPosition.x - b.gridPosition.x) +
+                   Mathf.Abs(a.gridPosition.y - b.gridPosition.y);
+        }
+
+        private float GetMovementCost(PathNode from, PathNode to)
+        {
+            // Base cost is 1 for adjacent cells
+            // Could add terrain costs here based on TileType
+            return 1f;
         }
 
         private List<PathNode> ReconstructPath(PathNode start, PathNode goal)
@@ -204,6 +282,7 @@ namespace TowerDefenseTK
             while (current != null)
             {
                 path.Add(current);
+                if (current == start) break;
                 current = current.parent;
             }
 
@@ -211,23 +290,24 @@ namespace TowerDefenseTK
             return path;
         }
 
+        /// <summary>
+        /// Clear path cache
+        /// </summary>
         public void ClearCache()
         {
             generatedPathCache.Clear();
         }
 
         /// <summary>
-        /// Recalculates all paths and forces all active units to update.
-        /// Call this when obstacles are placed or removed.
+        /// Recalculate all paths and update active followers
         /// </summary>
         public void RecalculateAndCacheAllPaths()
         {
-            Debug.Log("=== RECALCULATING ALL PATHS ===");
+            if (logPathfinding)
+                Debug.Log("=== RECALCULATING ALL PATHS ===");
 
-            // Clear existing cached paths
             generatedPathCache.Clear();
 
-            // Recalculate all start->end combinations
             int successCount = 0;
             int failCount = 0;
 
@@ -238,39 +318,34 @@ namespace TowerDefenseTK
                     if (startNode != null && endNode != null)
                     {
                         var path = FindPath(startNode, endNode);
-                        if (path != null)
+                        if (path != null && path.Count > 0)
                         {
                             generatedPathCache[(startNode, endNode)] = path;
                             successCount++;
-                            Debug.Log($"✓ Cached new path: {startNode.name} → {endNode.name} ({path.Count} nodes)");
                         }
                         else
                         {
                             failCount++;
-                            Debug.LogWarning($"✗ No path found: {startNode.name} → {endNode.name}");
                         }
                     }
                 }
             }
 
-            Debug.Log($"=== PATH RECALCULATION COMPLETE ===");
-            Debug.Log($"Success: {successCount} | Failed: {failCount}");
+            if (logPathfinding)
+                Debug.Log($"=== RECALCULATION COMPLETE: {successCount} success, {failCount} failed ===");
 
-            // Notify all listeners that paths have been recalculated
+            // Notify listeners
             OnPathsRecalculated?.Invoke();
 
-            // Force all active units to update their paths
+            // Update all active followers
             ReassignAllActivePaths();
         }
 
-        /// <summary>
-        /// Forces all active path followers to fetch new paths from cache
-        /// </summary>
         private void ReassignAllActivePaths()
         {
-            Debug.Log($"Reassigning paths to {activeFollowers.Count} active units");
+            if (logPathfinding)
+                Debug.Log($"Astar: Reassigning paths to {activeFollowers.Count} active units");
 
-            // Create a copy to avoid modification during iteration
             List<UnitPathFollower> followers = new List<UnitPathFollower>(activeFollowers);
 
             foreach (var follower in followers)

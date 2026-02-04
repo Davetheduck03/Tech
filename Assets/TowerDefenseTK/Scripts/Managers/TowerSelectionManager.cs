@@ -57,7 +57,7 @@ public class TowerSelectionManager : MonoBehaviour
     {
         if (TowerPlacementController.Instance != null)
         {
-            return TowerPlacementController.Instance.IsPlacingTower;
+            return TowerPlacementController.Instance.IsPlacing;
         }
         return false;
     }

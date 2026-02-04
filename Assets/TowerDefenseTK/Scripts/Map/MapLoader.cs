@@ -1,221 +1,180 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TowerDefenseTK;
 
-/// <summary>
-/// Loads MapData and initializes the grid at runtime.
-/// Attach to the same GameObject as GridManager.
-/// </summary>
-public class MapLoader : MonoBehaviour
+namespace TowerDefenseTK
 {
-    [Header("Map Data")]
-    public MapData mapData;
-
-    [Header("Prefabs")]
-    [SerializeField] private GameObject spawnPointPrefab;
-    [SerializeField] private GameObject exitPointPrefab;
-    [SerializeField] private GameObject blockedTilePrefab;
-
-    [Header("Runtime References")]
-    private List<GameObject> spawnedObjects = new List<GameObject>();
-
-    private GridManager gridManager;
-
-    private void Awake()
-    {
-        gridManager = GetComponent<GridManager>();
-    }
-
-    private void Start()
-    {
-        if (mapData != null)
-        {
-            LoadMap();
-        }
-    }
-
     /// <summary>
-    /// Load the map data and setup the scene
+    /// Loads MapData and coordinates between GridManager and PathNodeGenerator
     /// </summary>
-    public void LoadMap()
+    public class MapLoader : MonoBehaviour
     {
-        if (mapData == null)
+        [Header("Map Data")]
+        public MapData mapData;
+
+        [Header("Prefabs")]
+        [SerializeField] private GameObject spawnPointVisualPrefab;
+        [SerializeField] private GameObject exitPointVisualPrefab;
+        [SerializeField] private GameObject blockedTileVisualPrefab;
+
+        [Header("Settings")]
+        [SerializeField] private bool spawnVisuals = true;
+
+        private List<GameObject> spawnedVisuals = new List<GameObject>();
+
+        private void Awake()
         {
-            Debug.LogError("MapLoader: No MapData assigned!");
-            return;
+            ApplyGridSettings();
         }
 
-        if (!mapData.Validate(out string error))
+        /// <summary>
+        /// Apply map settings to GridManager before it generates
+        /// </summary>
+        private void ApplyGridSettings()
         {
-            Debug.LogError($"MapLoader: Invalid map data - {error}");
-            return;
-        }
+            if (mapData == null) return;
 
-        // Clear previous objects
-        ClearSpawnedObjects();
-
-        // Apply grid settings
-        if (gridManager != null)
-        {
-            gridManager.width = mapData.width;
-            gridManager.height = mapData.height;
-            gridManager.cellSize = mapData.cellSize;
-        }
-
-        // Initialize player resources
-        InitializePlayerResources();
-
-        // Spawn map elements after grid is generated
-        StartCoroutine(SpawnMapElementsDelayed());
-
-        Debug.Log($"MapLoader: Loaded map '{mapData.name}'");
-    }
-
-    private System.Collections.IEnumerator SpawnMapElementsDelayed()
-    {
-        // Wait for grid and pathfinding to initialize
-        yield return new WaitForEndOfFrame();
-        yield return new WaitForEndOfFrame();
-
-        SpawnMapElements();
-        ApplyTileStates();
-    }
-
-    private void InitializePlayerResources()
-    {
-        // Set starting currency
-        if (CurrencyManager.Instance != null)
-        {
-            CurrencyManager.Instance.Set(mapData.startingCurrency);
-        }
-
-        //// Set starting lives
-        //if (PlayerHealthManager.Instance != null)
-        //{
-        //    PlayerHealthManager.Instance.Initialize(mapData.startingLives);
-        //}
-    }
-
-    private void SpawnMapElements()
-    {
-        // Spawn spawn points
-        foreach (Vector2Int spawnCoord in mapData.spawnPoints)
-        {
-            SpawnAtTile(spawnCoord, spawnPointPrefab, "SpawnPoint");
-        }
-
-        // Spawn exit points
-        foreach (Vector2Int exitCoord in mapData.exitPoints)
-        {
-            SpawnAtTile(exitCoord, exitPointPrefab, "ExitPoint");
-        }
-
-        // Spawn blocked tiles (optional visual)
-        foreach (TileData tile in mapData.tiles)
-        {
-            if (tile.type == TileType.Blocked && blockedTilePrefab != null)
+            GridManager gm = GridManager.Instance;
+            if (gm == null)
             {
-                SpawnAtTile(tile.coords, blockedTilePrefab, "BlockedTile");
+                gm = FindFirstObjectByType<GridManager>();
             }
-        }
-    }
 
-    private void SpawnAtTile(Vector2Int coords, GameObject prefab, string defaultName)
-    {
-        if (prefab == null) return;
-
-        Vector3 worldPos = GetWorldPosition(coords);
-        GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity, transform);
-        obj.name = $"{defaultName} ({coords.x},{coords.y})";
-        spawnedObjects.Add(obj);
-    }
-
-    private Vector3 GetWorldPosition(Vector2Int coords)
-    {
-        if (gridManager != null)
-        {
-            return gridManager.GridToWorld(coords) +
-                   new Vector3(gridManager.cellSize / 2f, 0f, gridManager.cellSize / 2f);
-        }
-
-        return new Vector3(
-            coords.x * mapData.cellSize + mapData.cellSize / 2f,
-            0f,
-            coords.y * mapData.cellSize + mapData.cellSize / 2f
-        );
-    }
-
-    /// <summary>
-    /// Apply tile walkability and buildability states to PathNodes
-    /// </summary>
-    private void ApplyTileStates()
-    {
-        // Find all PathNodes and apply states
-        PathNode[] pathNodes = FindObjectsByType<PathNode>(FindObjectsSortMode.None);
-
-        foreach (PathNode node in pathNodes)
-        {
-            TileData tile = mapData.GetTile(node.gridPosition);
-
-            if (tile != null)
+            if (gm != null)
             {
-                // Set walkability based on tile type
-                node.isWalkable = tile.type != TileType.Blocked &&
-                                  tile.type != TileType.Buildable;
+                gm.width = mapData.width;
+                gm.height = mapData.height;
+                gm.cellSize = mapData.cellSize;
+
+                Debug.Log($"MapLoader: Applied grid settings - {mapData.width}x{mapData.height}, cell size {mapData.cellSize}");
             }
         }
 
-        // Mark grid cells as occupied for non-buildable tiles
-        if (gridManager != null)
+        private void Start()
         {
+            if (mapData != null)
+            {
+                StartCoroutine(InitializeMap());
+            }
+        }
+
+        private IEnumerator InitializeMap()
+        {
+            // Wait for grid and pathfinding to initialize
+            yield return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame();
+
+            InitializePlayerResources();
+
+            if (spawnVisuals)
+            {
+                SpawnMapVisuals();
+            }
+        }
+
+        private void InitializePlayerResources()
+        {
+            if (CurrencyManager.Instance != null)
+            {
+                CurrencyManager.Instance.Set(mapData.startingCurrency);
+            }
+
+            //if (PlayerHealthManager.Instance != null)
+            //{
+            //    PlayerHealthManager.Instance.Initialize(mapData.startingLives);
+            //}
+
+            Debug.Log($"MapLoader: Initialized with {mapData.startingCurrency} currency, {mapData.startingLives} lives");
+        }
+
+        private void SpawnMapVisuals()
+        {
+            ClearSpawnedVisuals();
+
+            // Spawn visual markers for spawn points
+            foreach (Vector2Int coords in mapData.spawnPoints)
+            {
+                SpawnVisualAt(coords, spawnPointVisualPrefab, "SpawnPoint");
+            }
+
+            // Spawn visual markers for exit points
+            foreach (Vector2Int coords in mapData.exitPoints)
+            {
+                SpawnVisualAt(coords, exitPointVisualPrefab, "ExitPoint");
+            }
+
+            // Spawn blocked tile visuals
             foreach (TileData tile in mapData.tiles)
             {
-                if (tile.type == TileType.Blocked)
+                if (tile.type == TileType.Blocked && blockedTileVisualPrefab != null)
                 {
-                    gridManager.SetCellOccupied(tile.coords, true);
+                    SpawnVisualAt(tile.coords, blockedTileVisualPrefab, "BlockedTile");
                 }
             }
         }
 
-        Debug.Log("MapLoader: Applied tile states to PathNodes");
-    }
-
-    private void ClearSpawnedObjects()
-    {
-        foreach (GameObject obj in spawnedObjects)
+        private void SpawnVisualAt(Vector2Int coords, GameObject prefab, string namePrefix)
         {
-            if (obj != null)
-            {
-                if (Application.isPlaying)
-                    Destroy(obj);
-                else
-                    DestroyImmediate(obj);
-            }
+            if (prefab == null) return;
+
+            Vector3 worldPos = GetWorldPosition(coords);
+            GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity, transform);
+            obj.name = $"{namePrefix} ({coords.x},{coords.y})";
+            spawnedVisuals.Add(obj);
         }
-        spawnedObjects.Clear();
-    }
 
-    /// <summary>
-    /// Get tile type at world position
-    /// </summary>
-    public TileType GetTileTypeAtPosition(Vector3 worldPos)
-    {
-        if (gridManager == null || mapData == null) return TileType.Empty;
+        private Vector3 GetWorldPosition(Vector2Int coords)
+        {
+            if (GridManager.Instance != null)
+            {
+                return GridManager.Instance.GridToWorld(coords) +
+                       new Vector3(GridManager.Instance.cellSize / 2f, 0f, GridManager.Instance.cellSize / 2f);
+            }
 
-        Vector2Int gridCoords = gridManager.WorldToGrid(worldPos);
-        TileData tile = mapData.GetTile(gridCoords);
+            return new Vector3(
+                coords.x * mapData.cellSize + mapData.cellSize / 2f,
+                0f,
+                coords.y * mapData.cellSize + mapData.cellSize / 2f
+            );
+        }
 
-        return tile?.type ?? TileType.Empty;
-    }
+        private void ClearSpawnedVisuals()
+        {
+            foreach (GameObject obj in spawnedVisuals)
+            {
+                if (obj != null)
+                {
+                    Destroy(obj);
+                }
+            }
+            spawnedVisuals.Clear();
+        }
 
-    /// <summary>
-    /// Check if position is buildable
-    /// </summary>
-    public bool IsBuildableAtPosition(Vector3 worldPos)
-    {
-        if (gridManager == null || mapData == null) return true;
+        /// <summary>
+        /// Get tile type at world position
+        /// </summary>
+        public TileType GetTileTypeAt(Vector3 worldPos)
+        {
+            if (mapData == null) return TileType.Empty;
 
-        Vector2Int gridCoords = gridManager.WorldToGrid(worldPos);
-        return mapData.IsBuildable(gridCoords);
+            Vector2Int coords = GridManager.Instance != null
+                ? GridManager.Instance.WorldToGrid(worldPos)
+                : new Vector2Int(
+                    Mathf.FloorToInt(worldPos.x / mapData.cellSize),
+                    Mathf.FloorToInt(worldPos.z / mapData.cellSize)
+                );
+
+            TileData tile = mapData.GetTile(coords);
+            return tile?.type ?? TileType.Empty;
+        }
+
+        /// <summary>
+        /// Check if position allows building
+        /// </summary>
+        public bool CanBuildAt(Vector3 worldPos)
+        {
+            TileType type = GetTileTypeAt(worldPos);
+            return type == TileType.Empty || type == TileType.Buildable;
+        }
     }
 }

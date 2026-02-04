@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   width: 10
   height: 10
-  cellSize: 1
+  cellSize: 2
   tiles:
   - coords: {x: 4, y: 6}
     type: 1
   - coords: {x: 0, y: 1}
-    type: 4
+    type: 1
   - coords: {x: 1, y: 1}
     type: 1
   - coords: {x: 2, y: 1}
@@ -37,85 +37,85 @@ MonoBehaviour:
   - coords: {x: 5, y: 4}
     type: 1
   - coords: {x: 5, y: 3}
-    type: 1
+    type: 3
   - coords: {x: 5, y: 2}
-    type: 1
+    type: 3
   - coords: {x: 5, y: 1}
-    type: 1
+    type: 3
   - coords: {x: 6, y: 1}
-    type: 1
+    type: 3
   - coords: {x: 7, y: 1}
-    type: 1
+    type: 3
   - coords: {x: 7, y: 2}
-    type: 1
+    type: 3
   - coords: {x: 7, y: 3}
-    type: 1
+    type: 3
   - coords: {x: 7, y: 4}
     type: 1
   - coords: {x: 7, y: 5}
-    type: 1
+    type: 3
   - coords: {x: 7, y: 6}
     type: 3
   - coords: {x: 7, y: 7}
-    type: 3
+    type: 1
   - coords: {x: 8, y: 8}
     type: 3
   - coords: {x: 7, y: 8}
     type: 3
   - coords: {x: 9, y: 8}
-    type: 1
+    type: 3
   - coords: {x: 9, y: 9}
-    type: 5
+    type: 3
   - coords: {x: 8, y: 5}
-    type: 1
+    type: 3
   - coords: {x: 8, y: 6}
-    type: 1
+    type: 3
   - coords: {x: 8, y: 7}
     type: 1
   - coords: {x: 9, y: 7}
-    type: 1
+    type: 5
   - coords: {x: 5, y: 5}
-    type: 1
+    type: 3
   - coords: {x: 5, y: 6}
     type: 1
   - coords: {x: 5, y: 7}
-    type: 1
+    type: 3
   - coords: {x: 5, y: 8}
-    type: 1
+    type: 3
   - coords: {x: 6, y: 8}
     type: 3
   - coords: {x: 6, y: 9}
-    type: 1
+    type: 3
   - coords: {x: 7, y: 9}
-    type: 1
+    type: 3
   - coords: {x: 8, y: 9}
-    type: 1
+    type: 3
   - coords: {x: 3, y: 6}
     type: 1
   - coords: {x: 3, y: 7}
     type: 1
   - coords: {x: 2, y: 7}
-    type: 1
+    type: 3
   - coords: {x: 2, y: 8}
-    type: 1
+    type: 3
   - coords: {x: 2, y: 9}
     type: 1
   - coords: {x: 3, y: 9}
     type: 1
   - coords: {x: 4, y: 9}
-    type: 1
-  - coords: {x: 5, y: 9}
-    type: 1
-  - coords: {x: 3, y: 8}
     type: 3
+  - coords: {x: 5, y: 9}
+    type: 3
+  - coords: {x: 3, y: 8}
+    type: 1
   - coords: {x: 4, y: 8}
     type: 3
   - coords: {x: 4, y: 7}
     type: 3
   - coords: {x: 1, y: 9}
-    type: 3
+    type: 1
   - coords: {x: 0, y: 9}
-    type: 3
+    type: 4
   - coords: {x: 0, y: 8}
     type: 3
   - coords: {x: 0, y: 7}
@@ -153,13 +153,13 @@ MonoBehaviour:
   - coords: {x: 4, y: 5}
     type: 3
   - coords: {x: 6, y: 7}
-    type: 3
+    type: 1
   - coords: {x: 6, y: 6}
-    type: 3
+    type: 1
   - coords: {x: 6, y: 5}
-    type: 3
+    type: 1
   - coords: {x: 6, y: 4}
-    type: 3
+    type: 1
   - coords: {x: 6, y: 3}
     type: 3
   - coords: {x: 6, y: 2}
@@ -169,9 +169,9 @@ MonoBehaviour:
   - coords: {x: 9, y: 5}
     type: 3
   - coords: {x: 9, y: 4}
-    type: 3
+    type: 5
   - coords: {x: 8, y: 4}
-    type: 3
+    type: 1
   - coords: {x: 8, y: 3}
     type: 3
   - coords: {x: 8, y: 2}
@@ -215,10 +215,12 @@ MonoBehaviour:
   - coords: {x: 1, y: 0}
     type: 3
   - coords: {x: 0, y: 0}
-    type: 3
+    type: 4
   spawnPoints:
-  - {x: 0, y: 1}
+  - {x: 0, y: 0}
+  - {x: 0, y: 9}
   exitPoints:
-  - {x: 9, y: 9}
+  - {x: 9, y: 7}
+  - {x: 9, y: 4}
   startingCurrency: 500
   startingLives: 20
