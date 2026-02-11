@@ -2123,6 +2123,7 @@ MonoBehaviour:
   validColor: {r: 0, g: 1, b: 0, a: 1}
   invalidColor: {r: 1, g: 0, b: 0, a: 1}
   cantAffordColor: {r: 1, g: 0.5, b: 0, a: 1}
+  hybridColor: {r: 0.9, g: 0.7, b: 0.2, a: 1}
   exitAfterPlace: 1
   cancelKey: 27
 --- !u!114 &1616193143
@@ -2513,8 +2514,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e0806b0cdfee7409ae3e617445c945, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 10
-  height: 10
+  width: 15
+  height: 15
   cellSize: 2
   drawGridInGame: 1
   lineMaterial: {fileID: 2100000, guid: 9d598c9208848f148906342fa298db80, type: 2}
@@ -2534,6 +2535,7 @@ MonoBehaviour:
   spawnPointVisualPrefab: {fileID: 0}
   exitPointVisualPrefab: {fileID: 0}
   blockedTileVisualPrefab: {fileID: 0}
+  hybridTileVisualPrefab: {fileID: 0}
   spawnVisuals: 1
 --- !u!1 &2115823310
 GameObject:
