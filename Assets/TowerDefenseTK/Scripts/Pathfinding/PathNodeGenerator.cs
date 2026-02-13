@@ -16,12 +16,21 @@ namespace TowerDefenseTK
         [Header("Map Data")]
         [SerializeField] private MapData mapData;
 
+        [Header("Spawner Settings")]
+        [Tooltip("If true, automatically adds EnemySpawner to Spawn nodes")]
+        [SerializeField] private bool autoAttachSpawners = true;
+        [SerializeField] private string defaultEnemyPoolName = "Basic Enemy";
+        [SerializeField] private int defaultEnemiesToSpawn = 5;
+        [SerializeField] private float defaultSpawnInterval = 0.5f;
+        [SerializeField] private float defaultWaveCooldown = 10f;
+
         [Header("Debug")]
         [SerializeField] private bool showDebugGizmos = true;
 
         private Dictionary<Vector2Int, PathNode> pathNodes = new Dictionary<Vector2Int, PathNode>();
+        private List<EnemySpawner> spawnedSpawners = new List<EnemySpawner>();
 
-        // Public access to nodes
+        // Public access
         public Dictionary<Vector2Int, PathNode> PathNodes => pathNodes;
 
         private void Awake()
@@ -46,6 +55,11 @@ namespace TowerDefenseTK
             ApplyMapData();
             RegisterSpecialNodes();
 
+            if (autoAttachSpawners)
+            {
+                AttachSpawnersToSpawnNodes();
+            }
+
             StartCoroutine(DelayedGridGenerated());
         }
 
@@ -55,9 +69,8 @@ namespace TowerDefenseTK
             OnGridGenerated?.Invoke();
         }
 
-        /// <summary>
-        /// Generate PathNodes based on GridManager
-        /// </summary>
+        #region Node Generation
+
         private void GenerateNodes()
         {
             GridManager gm = GridManager.Instance;
@@ -98,9 +111,6 @@ namespace TowerDefenseTK
             Debug.Log($"PathNodeGenerator: Created {pathNodes.Count} nodes");
         }
 
-        /// <summary>
-        /// Link neighboring nodes for pathfinding
-        /// </summary>
         private void LinkNeighbors()
         {
             Vector2Int[] directions = new Vector2Int[]
@@ -128,9 +138,10 @@ namespace TowerDefenseTK
             }
         }
 
-        /// <summary>
-        /// Apply MapData tile types to PathNodes
-        /// </summary>
+        #endregion
+
+        #region MapData Application
+
         private void ApplyMapData()
         {
             if (mapData == null)
@@ -147,24 +158,21 @@ namespace TowerDefenseTK
                 }
             }
 
-            Debug.Log($"PathNodeGenerator: Applied {mapData.tiles.Count} tile configurations from MapData");
+            Debug.Log($"PathNodeGenerator: Applied {mapData.tiles.Count} tile configurations");
         }
 
-        /// <summary>
-        /// Register spawn and exit nodes with NodeGetter
-        /// </summary>
         private void RegisterSpecialNodes()
         {
-            // Clear existing registrations
-            if (NodeGetter.nodeValue.ContainsKey(NodeType.Start))
-                NodeGetter.nodeValue[NodeType.Start].Clear();
-            else
+            // Initialize dictionaries if needed
+            if (!NodeGetter.nodeValue.ContainsKey(NodeType.Start))
                 NodeGetter.nodeValue[NodeType.Start] = new List<PathNode>();
-
-            if (NodeGetter.nodeValue.ContainsKey(NodeType.End))
-                NodeGetter.nodeValue[NodeType.End].Clear();
             else
+                NodeGetter.nodeValue[NodeType.Start].Clear();
+
+            if (!NodeGetter.nodeValue.ContainsKey(NodeType.End))
                 NodeGetter.nodeValue[NodeType.End] = new List<PathNode>();
+            else
+                NodeGetter.nodeValue[NodeType.End].Clear();
 
             foreach (var kvp in pathNodes)
             {
@@ -173,30 +181,88 @@ namespace TowerDefenseTK
                 if (node.IsSpawnPoint)
                 {
                     NodeGetter.nodeValue[NodeType.Start].Add(node);
-                    Debug.Log($"Registered spawn point: {node.name}");
+                    Debug.Log($"PathNodeGenerator: Registered spawn point '{node.name}'");
                 }
                 else if (node.IsExitPoint)
                 {
                     NodeGetter.nodeValue[NodeType.End].Add(node);
-                    Debug.Log($"Registered exit point: {node.name}");
+                    Debug.Log($"PathNodeGenerator: Registered exit point '{node.name}'");
                 }
             }
 
-            Debug.Log($"PathNodeGenerator: Registered {NodeGetter.nodeValue[NodeType.Start].Count} spawn points, {NodeGetter.nodeValue[NodeType.End].Count} exit points");
+            Debug.Log($"PathNodeGenerator: {NodeGetter.nodeValue[NodeType.Start].Count} spawn points, " +
+                     $"{NodeGetter.nodeValue[NodeType.End].Count} exit points");
         }
 
-        /// <summary>
-        /// Get PathNode at grid coordinates
-        /// </summary>
+        #endregion
+
+        #region Auto Spawner Attachment
+
+        private void AttachSpawnersToSpawnNodes()
+        {
+            // Clear any previously spawned spawners
+            foreach (var spawner in spawnedSpawners)
+            {
+                if (spawner != null)
+                {
+                    Destroy(spawner);
+                }
+            }
+            spawnedSpawners.Clear();
+
+            // Find all spawn nodes and attach spawners
+            if (!NodeGetter.nodeValue.ContainsKey(NodeType.Start))
+            {
+                Debug.LogWarning("PathNodeGenerator: No spawn nodes to attach spawners to!");
+                return;
+            }
+
+            foreach (PathNode spawnNode in NodeGetter.nodeValue[NodeType.Start])
+            {
+                if (spawnNode == null) continue;
+
+                // Check if already has a spawner
+                EnemySpawner existingSpawner = spawnNode.GetComponent<EnemySpawner>();
+                if (existingSpawner != null)
+                {
+                    Debug.Log($"PathNodeGenerator: Spawn node '{spawnNode.name}' already has EnemySpawner");
+                    spawnedSpawners.Add(existingSpawner);
+                    continue;
+                }
+
+                // Add new spawner
+                EnemySpawner newSpawner = spawnNode.gameObject.AddComponent<EnemySpawner>();
+                ConfigureSpawner(newSpawner);
+                spawnedSpawners.Add(newSpawner);
+
+                Debug.Log($"PathNodeGenerator: ✓ Attached EnemySpawner to '{spawnNode.name}'");
+            }
+
+            Debug.Log($"PathNodeGenerator: {spawnedSpawners.Count} spawners ready");
+        }
+
+        private void ConfigureSpawner(EnemySpawner spawner)
+        {
+            // Use the public Configure method
+            spawner.Configure(
+                defaultEnemyPoolName,
+                defaultEnemiesToSpawn,
+                defaultSpawnInterval,
+                defaultWaveCooldown,
+                autoInit: true
+            );
+        }
+
+        #endregion
+
+        #region Public Methods
+
         public PathNode GetNodeAt(Vector2Int coords)
         {
             pathNodes.TryGetValue(coords, out PathNode node);
             return node;
         }
 
-        /// <summary>
-        /// Get PathNode at world position
-        /// </summary>
         public PathNode GetNodeAtWorldPosition(Vector3 worldPos)
         {
             if (GridManager.Instance == null) return null;
@@ -205,75 +271,31 @@ namespace TowerDefenseTK
             return GetNodeAt(coords);
         }
 
-        /// <summary>
-        /// Set tile type at coordinates (runtime modification)
-        /// </summary>
-        public void SetTileType(Vector2Int coords, TileType type)
+        public void PlaceTowerOnNode(Vector2Int coords)
         {
             if (pathNodes.TryGetValue(coords, out PathNode node))
             {
-                node.SetTileType(type);
-
-                // Update GridManager occupancy
-                if (GridManager.Instance != null)
-                {
-                    bool isOccupied = type == TileType.Blocked || type == TileType.Buildable;
-                    GridManager.Instance.SetCellOccupied(coords, isOccupied);
-                }
+                node.PlaceTower();
             }
         }
 
-        /// <summary>
-        /// Block a node when a tower is placed
-        /// </summary>
-        public void BlockNodeForTower(Vector2Int coords)
+        public void RemoveTowerFromNode(Vector2Int coords)
         {
             if (pathNodes.TryGetValue(coords, out PathNode node))
             {
-                node.isWalkable = false;
-                Debug.Log($"PathNodeGenerator: Blocked node at {coords} for tower");
+                node.RemoveTower();
             }
         }
 
-        /// <summary>
-        /// Unblock a node when a tower is removed
-        /// </summary>
-        public void UnblockNode(Vector2Int coords)
-        {
-            if (pathNodes.TryGetValue(coords, out PathNode node))
-            {
-                // Restore walkability based on original tile type
-                TileType originalType = TileType.Empty;
+        // Legacy support
+        public void BlockNodeForTower(Vector2Int coords) => PlaceTowerOnNode(coords);
+        public void UnblockNode(Vector2Int coords) => RemoveTowerFromNode(coords);
 
-                if (mapData != null)
-                {
-                    TileData tileData = mapData.GetTile(coords);
-                    if (tileData != null)
-                    {
-                        originalType = tileData.type;
-                    }
-                }
+        public List<EnemySpawner> GetSpawners() => spawnedSpawners;
 
-                node.SetTileType(originalType);
-                Debug.Log($"PathNodeGenerator: Unblocked node at {coords}");
-            }
-        }
+        #endregion
 
-        /// <summary>
-        /// Reload map data at runtime
-        /// </summary>
-        public void ReloadMapData(MapData newMapData)
-        {
-            mapData = newMapData;
-            ApplyMapData();
-            RegisterSpecialNodes();
-
-            // Trigger path recalculation
-            if (Astar.Instance != null)
-            {
-                Astar.Instance.RecalculateAndCacheAllPaths();
-            }
-        }
+        #region Debug Gizmos
 
 #if UNITY_EDITOR
         private void OnDrawGizmos()
@@ -293,20 +315,25 @@ namespace TowerDefenseTK
                     TileType.Buildable => new Color(0.3f, 0.6f, 0.3f, 0.5f),
                     TileType.Spawn => new Color(0.2f, 0.5f, 0.8f, 0.8f),
                     TileType.Exit => new Color(0.8f, 0.2f, 0.2f, 0.8f),
+                    TileType.Hybrid => node.HasTower
+                        ? new Color(0.8f, 0.4f, 0.1f, 0.7f)
+                        : new Color(0.9f, 0.7f, 0.2f, 0.6f),
                     _ => new Color(0.5f, 0.5f, 0.5f, 0.3f)
                 };
 
-                Gizmos.DrawCube(pos, Vector3.one * 0.5f);
+                Gizmos.DrawCube(pos, Vector3.one * 0.4f);
 
                 // Draw X for non-walkable
                 if (!node.isWalkable)
                 {
                     Gizmos.color = Color.red;
-                    Gizmos.DrawLine(pos + new Vector3(-0.3f, 0, -0.3f), pos + new Vector3(0.3f, 0, 0.3f));
-                    Gizmos.DrawLine(pos + new Vector3(-0.3f, 0, 0.3f), pos + new Vector3(0.3f, 0, -0.3f));
+                    Gizmos.DrawLine(pos + new Vector3(-0.2f, 0, -0.2f), pos + new Vector3(0.2f, 0, 0.2f));
+                    Gizmos.DrawLine(pos + new Vector3(-0.2f, 0, 0.2f), pos + new Vector3(0.2f, 0, -0.2f));
                 }
             }
         }
 #endif
+
+        #endregion
     }
 }

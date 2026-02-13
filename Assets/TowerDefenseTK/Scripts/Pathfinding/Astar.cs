@@ -262,9 +262,15 @@ namespace TowerDefenseTK
 
         private float Heuristic(PathNode a, PathNode b)
         {
-            // Manhattan distance for grid-based movement
-            return Mathf.Abs(a.gridPosition.x - b.gridPosition.x) +
-                   Mathf.Abs(a.gridPosition.y - b.gridPosition.y);
+            // Manhattan distance for 4-directional movement
+            float dx = Mathf.Abs(a.gridPosition.x - b.gridPosition.x);
+            float dy = Mathf.Abs(a.gridPosition.y - b.gridPosition.y);
+
+            // Add small tie-breaker to prefer straighter paths
+            // This breaks ties by slightly preferring paths closer to a straight line
+            float cross = Mathf.Abs(dx - dy) * 0.001f;
+
+            return dx + dy + cross;
         }
 
         private float GetMovementCost(PathNode from, PathNode to)
