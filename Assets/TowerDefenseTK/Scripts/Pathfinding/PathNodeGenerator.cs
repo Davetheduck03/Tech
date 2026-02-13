@@ -17,7 +17,7 @@ namespace TowerDefenseTK
         [SerializeField] private MapData mapData;
 
         [Header("Spawner Settings")]
-        [Tooltip("If true, automatically adds EnemySpawner to Spawn nodes")]
+        [Tooltip("If true, automatically adds EnemySpawner to Spawn nodes and ExitZone to Exit nodes")]
         [SerializeField] private bool autoAttachSpawners = true;
         [SerializeField] private string defaultEnemyPoolName = "Basic Enemy";
         [SerializeField] private int defaultEnemiesToSpawn = 5;
@@ -58,6 +58,7 @@ namespace TowerDefenseTK
             if (autoAttachSpawners)
             {
                 AttachSpawnersToSpawnNodes();
+                AttachExitZonesToExitNodes();
             }
 
             StartCoroutine(DelayedGridGenerated());
@@ -251,6 +252,65 @@ namespace TowerDefenseTK
                 defaultWaveCooldown,
                 autoInit: true
             );
+        }
+
+        #endregion
+
+        #region Auto ExitZone Attachment
+
+        private void AttachExitZonesToExitNodes()
+        {
+            if (!NodeGetter.nodeValue.ContainsKey(NodeType.End))
+            {
+                Debug.LogWarning("PathNodeGenerator: No exit nodes to attach ExitZones to!");
+                return;
+            }
+
+            int count = 0;
+
+            foreach (PathNode exitNode in NodeGetter.nodeValue[NodeType.End])
+            {
+                if (exitNode == null) continue;
+
+                // Skip if already has ExitZone
+                if (exitNode.GetComponent<ExitZone>() != null)
+                {
+                    count++;
+                    continue;
+                }
+
+                // Ensure there's a trigger collider for detection
+                Collider col = exitNode.GetComponent<Collider>();
+                if (col == null)
+                {
+                    BoxCollider box = exitNode.gameObject.AddComponent<BoxCollider>();
+                    box.isTrigger = true;
+                    box.size = new Vector3(
+                        GridManager.Instance.cellSize * 0.8f,
+                        2f,
+                        GridManager.Instance.cellSize * 0.8f
+                    );
+                }
+                else if (!col.isTrigger)
+                {
+                    // Existing collider is not a trigger, add a separate trigger collider
+                    BoxCollider triggerBox = exitNode.gameObject.AddComponent<BoxCollider>();
+                    triggerBox.isTrigger = true;
+                    triggerBox.size = new Vector3(
+                        GridManager.Instance.cellSize * 0.8f,
+                        2f,
+                        GridManager.Instance.cellSize * 0.8f
+                    );
+                }
+
+                // Add ExitZone component
+                exitNode.gameObject.AddComponent<ExitZone>();
+                count++;
+
+                Debug.Log($"PathNodeGenerator: ✓ Attached ExitZone to '{exitNode.name}'");
+            }
+
+            Debug.Log($"PathNodeGenerator: {count} exit zones ready");
         }
 
         #endregion

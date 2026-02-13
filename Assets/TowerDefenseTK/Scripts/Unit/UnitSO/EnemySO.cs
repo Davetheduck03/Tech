@@ -6,4 +6,8 @@ using UnityEngine;
 public class EnemySO : UnitSO
 {
     public bool isFlying;
+
+    [Header("Base Damage")]
+    [Tooltip("Damage dealt to player when enemy reaches the exit")]
+    public int damageToBase = 1;
 }
