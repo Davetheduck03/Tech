@@ -775,6 +775,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dcea6b8a2d665340b129d5e14e41f0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  drawAllPaths: 1
   startNodeType: 0
   endNodeType: 1
   startNodeIndex: 0

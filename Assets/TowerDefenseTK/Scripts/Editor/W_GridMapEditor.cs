@@ -4,7 +4,7 @@ using TowerDefenseTK;
 
 public class W_GridMapEditor : EditorWindow
 {
-	[MenuItem("Tools/TD Toolkit/Grid Map Editor")]
+	[MenuItem("Tools/Grid Map Editor")]
 	public static void ShowWindow()
 	{
 		var window = GetWindow<W_GridMapEditor>("Grid Map Editor");

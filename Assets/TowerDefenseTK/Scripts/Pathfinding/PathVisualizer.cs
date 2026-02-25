@@ -3,360 +3,442 @@ using UnityEngine;
 
 namespace TowerDefenseTK
 {
-    /// <summary>
-    /// Visualizes the current cached path using a dotted, animated line effect.
-    /// Automatically updates when paths are recalculated.
-    /// </summary>
-    public class PathVisualizer : MonoBehaviour
-    {
-        [Header("Path Selection")]
-        [SerializeField] private NodeType startNodeType = NodeType.Start;
-        [SerializeField] private NodeType endNodeType = NodeType.End;
-        [SerializeField] private int startNodeIndex = 0;
-        [SerializeField] private int endNodeIndex = 0;
-        [SerializeField] private bool autoUpdateOnPathChange = true;
+	/// <summary>
+	/// Visualizes cached A* paths using a dotted, animated line effect.
+	/// Supports drawing a single path (by index) or all precomputed paths at once.
+	/// </summary>
+	public class PathVisualizer : MonoBehaviour
+	{
+		[Header("Path Selection")]
+		[Tooltip("Draw every path in the Astar cache instead of a single start→end pair")]
+		[SerializeField] private bool drawAllPaths = false;
+		[SerializeField] private NodeType startNodeType = NodeType.Start;
+		[SerializeField] private NodeType endNodeType = NodeType.End;
+		[SerializeField] private int startNodeIndex = 0;
+		[SerializeField] private int endNodeIndex = 0;
+		[SerializeField] private bool autoUpdateOnPathChange = true;
 
-        [Header("Visual Settings")]
-        [SerializeField] private float lineWidth = 0.15f;
-        [SerializeField] private Color lineColor = new Color(0.2f, 0.8f, 1f, 0.9f);
-        [SerializeField] private float heightOffset = 0.25f;
-        [SerializeField] private bool showOnStart = true;
+		[Header("Visual Settings")]
+		[SerializeField] private float lineWidth = 0.15f;
+		[SerializeField] private Color lineColor = new Color(0.2f, 0.8f, 1f, 0.9f);
+		[SerializeField] private float heightOffset = 0.25f;
+		[SerializeField] private bool showOnStart = true;
 
-        [Header("Dash Pattern")]
-        [SerializeField] private float dashLength = 0.4f;
-        [SerializeField] private float gapLength = 0.2f;
-        [SerializeField] private int pointsPerUnit = 10;
+		[Header("Dash Pattern")]
+		[SerializeField] private float dashLength = 0.4f;
+		[SerializeField] private float gapLength = 0.2f;
+		[SerializeField] private int pointsPerUnit = 10;
 
-        [Header("Animation")]
-        [SerializeField] private bool animateLine = true;
-        [SerializeField] private float scrollSpeed = 1f;
+		[Header("Animation")]
+		[SerializeField] private bool animateLine = true;
+		[SerializeField] private float scrollSpeed = 1f;
 
-        private LineRenderer lineRenderer;
-        private Material lineMaterial;
-        private float animationOffset = 0f;
-        private PathNode currentStartNode;
-        private PathNode currentEndNode;
+		// Primary line renderer (used for single-path mode or the first path in all-path mode)
+		private LineRenderer lineRenderer;
+		private Material lineMaterial;
 
-        private void Start()
-        {
-            SetupLineRenderer();
+		// Extra line renderers spawned for additional paths when drawAllPaths = true
+		private List<LineRenderer> extraLineRenderers = new List<LineRenderer>();
+		private List<Material> extraMaterials = new List<Material>();
 
-            // Subscribe to Astar if available
-            if (Astar.Instance != null)
-            {
-                Astar.Instance.OnPathsRecalculated += OnPathRecalculated;
-            }
+		private float animationOffset = 0f;
+		private PathNode currentStartNode;
+		private PathNode currentEndNode;
 
-            if (showOnStart)
-            {
-                Invoke(nameof(InitializeAndDrawPath), 0.5f);
-            }
-        }
+		#region Unity Lifecycle
 
-        private void OnEnable()
-        {
-            if (autoUpdateOnPathChange)
-            {
-                // Subscribe to path updates
-                PathNodeGenerator.OnGridGenerated += OnPathsGenerated;
-            }
-        }
+		private void Start()
+		{
+			SetupLineRenderer();
 
-        private void OnDisable()
-        {
-            if (autoUpdateOnPathChange)
-            {
-                PathNodeGenerator.OnGridGenerated -= OnPathsGenerated;
-            }
+			if (Astar.Instance != null)
+				Astar.Instance.OnPathsRecalculated += OnPathRecalculated;
 
-            // Unsubscribe from Astar
-            if (Astar.Instance != null)
-            {
-                Astar.Instance.OnPathsRecalculated -= OnPathRecalculated;
-            }
-        }
+			if (showOnStart)
+				Invoke(nameof(InitializeAndDrawPath), 0.5f);
+		}
 
-        private void OnPathsGenerated()
-        {
-            Invoke(nameof(InitializeAndDrawPath), 0.6f);
-        }
+		private void OnEnable()
+		{
+			if (autoUpdateOnPathChange)
+				PathNodeGenerator.OnGridGenerated += OnPathsGenerated;
+		}
 
-        /// <summary>
-        /// Called when Astar recalculates paths due to obstacles
-        /// </summary>
-        private void OnPathRecalculated()
-        {
-            Debug.Log("PathVisualizer: Detected path recalculation, refreshing visualization");
-            Invoke(nameof(RefreshPath), 0.1f);
-        }
+		private void OnDisable()
+		{
+			if (autoUpdateOnPathChange)
+				PathNodeGenerator.OnGridGenerated -= OnPathsGenerated;
 
-        private void InitializeAndDrawPath()
-        {
-            // Get the start and end nodes based on indices
-            if (NodeGetter.nodeValue.ContainsKey(startNodeType) &&
-                NodeGetter.nodeValue[startNodeType].Count > startNodeIndex)
-            {
-                currentStartNode = NodeGetter.nodeValue[startNodeType][startNodeIndex];
-            }
+			if (Astar.Instance != null)
+				Astar.Instance.OnPathsRecalculated -= OnPathRecalculated;
+		}
 
-            if (NodeGetter.nodeValue.ContainsKey(endNodeType) &&
-                NodeGetter.nodeValue[endNodeType].Count > endNodeIndex)
-            {
-                currentEndNode = NodeGetter.nodeValue[endNodeType][endNodeIndex];
-            }
+		private void Update()
+		{
+			if (!animateLine) return;
 
-            if (currentStartNode != null && currentEndNode != null)
-            {
-                RefreshPath();
-            }
-            else
-            {
-                Debug.LogWarning("PathVisualizer: Could not find start or end nodes!");
-            }
-        }
+			animationOffset -= scrollSpeed * Time.deltaTime;
 
-        /// <summary>
-        /// Manually refresh the path visualization from cache
-        /// </summary>
-        public void RefreshPath()
-        {
-            if (currentStartNode == null || currentEndNode == null)
-            {
-                Debug.LogWarning("PathVisualizer: Start or end node is null!");
-                Debug.LogWarning($"  Start Node: {currentStartNode}, End Node: {currentEndNode}");
-                return;
-            }
+			// Animate primary renderer
+			if (lineRenderer.positionCount > 0 && lineMaterial != null)
+				lineMaterial.mainTextureOffset = new Vector2(animationOffset, 0f);
 
-            if (Astar.Instance == null)
-            {
-                Debug.LogError("PathVisualizer: Astar.Instance is null!");
-                return;
-            }
+			// Animate extra renderers
+			for (int i = 0; i < extraMaterials.Count; i++)
+			{
+				if (extraMaterials[i] != null)
+					extraMaterials[i].mainTextureOffset = new Vector2(animationOffset, 0f);
+			}
+		}
 
-            var cacheKey = (currentStartNode, currentEndNode);
+		private void OnDestroy()
+		{
+			DestroyLineMaterial(lineMaterial);
+			DestroyExtraRenderers();
+		}
 
-            Debug.Log($"PathVisualizer: Looking for path from {currentStartNode.name} to {currentEndNode.name}");
-            Debug.Log($"PathVisualizer: Cache contains {Astar.Instance.generatedPathCache.Count} paths");
+		#endregion
 
-            if (Astar.Instance.generatedPathCache.ContainsKey(cacheKey))
-            {
-                List<PathNode> path = Astar.Instance.generatedPathCache[cacheKey];
-                DrawPath(path);
-                Debug.Log($"PathVisualizer: ✓ Drawing cached path with {path.Count} nodes");
-            }
-            else
-            {
-                Debug.LogWarning($"PathVisualizer: ✗ No cached path found for {currentStartNode.name} → {currentEndNode.name}");
+		#region Path Drawing
 
-                // List all available paths in cache for debugging
-                Debug.Log("Available paths in cache:");
-                foreach (var kvp in Astar.Instance.generatedPathCache)
-                {
-                    Debug.Log($"  {kvp.Key.Item1.name} → {kvp.Key.Item2.name}");
-                }
+		private void OnPathsGenerated()
+		{
+			Invoke(nameof(InitializeAndDrawPath), 0.6f);
+		}
 
-                ClearPath();
-            }
-        }
+		private void OnPathRecalculated()
+		{
+			Invoke(nameof(RefreshPath), 0.1f);
+		}
 
-        /// <summary>
-        /// Set which path to visualize by node indices
-        /// </summary>
-        public void SetPathToVisualize(int startIndex, int endIndex)
-        {
-            startNodeIndex = startIndex;
-            endNodeIndex = endIndex;
-            InitializeAndDrawPath();
-        }
+		private void InitializeAndDrawPath()
+		{
+			if (!drawAllPaths)
+			{
+				// Resolve single start/end nodes by index
+				if (NodeGetter.nodeValue.ContainsKey(startNodeType) &&
+					NodeGetter.nodeValue[startNodeType].Count > startNodeIndex)
+					currentStartNode = NodeGetter.nodeValue[startNodeType][startNodeIndex];
 
-        /// <summary>
-        /// Set which path to visualize by specific nodes
-        /// </summary>
-        public void SetPathToVisualize(PathNode startNode, PathNode endNode)
-        {
-            currentStartNode = startNode;
-            currentEndNode = endNode;
-            RefreshPath();
-        }
+				if (NodeGetter.nodeValue.ContainsKey(endNodeType) &&
+					NodeGetter.nodeValue[endNodeType].Count > endNodeIndex)
+					currentEndNode = NodeGetter.nodeValue[endNodeType][endNodeIndex];
 
-        private void SetupLineRenderer()
-        {
-            lineRenderer = GetComponent<LineRenderer>();
-            if (lineRenderer == null)
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
+				if (currentStartNode == null || currentEndNode == null)
+				{
+					Debug.LogWarning("PathVisualizer: Could not find start or end nodes!");
+					return;
+				}
+			}
 
-            lineRenderer.startWidth = lineWidth;
-            lineRenderer.endWidth = lineWidth;
+			RefreshPath();
+		}
 
-            // Use Particles/Standard Unlit for better texture support
-            Shader shader = Shader.Find("Particles/Standard Unlit");
-            if (shader == null)
-                shader = Shader.Find("Sprites/Default");
+		/// <summary>
+		/// Redraw from cache. Works for both single-path and all-paths modes.
+		/// </summary>
+		public void RefreshPath()
+		{
+			if (Astar.Instance == null)
+			{
+				Debug.LogError("PathVisualizer: Astar.Instance is null!");
+				return;
+			}
 
-            lineMaterial = new Material(shader);
-            lineMaterial.color = lineColor;
+			if (drawAllPaths)
+			{
+				DrawAllCachedPaths();
+			}
+			else
+			{
+				DrawSinglePath();
+			}
+		}
 
-            // Create a simple dash texture
-            CreateDashTexture();
+		// ── Single path ───────────────────────────────────────────────────────
 
-            lineRenderer.material = lineMaterial;
-            lineRenderer.startColor = lineColor;
-            lineRenderer.endColor = lineColor;
-            lineRenderer.numCornerVertices = 5;
-            lineRenderer.numCapVertices = 5;
-            lineRenderer.useWorldSpace = true;
-            lineRenderer.textureMode = LineTextureMode.Tile;
-            lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            lineRenderer.receiveShadows = false;
-            lineRenderer.sortingOrder = 1000;
-        }
+		private void DrawSinglePath()
+		{
+			ClearExtraRenderers();
 
-        private void CreateDashTexture()
-        {
-            // Create a simple dash pattern texture
-            int width = 64;
-            int height = 4;
-            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            tex.wrapMode = TextureWrapMode.Repeat;
+			if (currentStartNode == null || currentEndNode == null)
+			{
+				Debug.LogWarning("PathVisualizer: Start or end node is null!");
+				ClearPath();
+				return;
+			}
 
-            float dashRatio = dashLength / (dashLength + gapLength);
-            int dashPixels = Mathf.RoundToInt(width * dashRatio);
+			var key = (currentStartNode, currentEndNode);
+			if (Astar.Instance.generatedPathCache.TryGetValue(key, out List<PathNode> path))
+			{
+				ApplyPathToRenderer(lineRenderer, lineMaterial, path);
+				Debug.Log($"PathVisualizer: Drawing cached path with {path.Count} nodes");
+			}
+			else
+			{
+				Debug.LogWarning($"PathVisualizer: No cached path for {currentStartNode.name} → {currentEndNode.name}");
+				ClearPath();
+			}
+		}
 
-            for (int x = 0; x < width; x++)
-            {
-                Color color = x < dashPixels ? Color.white : Color.clear;
-                for (int y = 0; y < height; y++)
-                {
-                    tex.SetPixel(x, y, color);
-                }
-            }
+		// ── All paths ─────────────────────────────────────────────────────────
 
-            tex.Apply();
-            lineMaterial.mainTexture = tex;
-        }
+		private void DrawAllCachedPaths()
+		{
+			var cache = Astar.Instance.generatedPathCache;
 
-        private void DrawPath(List<PathNode> path)
-        {
-            if (path == null || path.Count < 2)
-            {
-                ClearPath();
-                return;
-            }
+			if (cache.Count == 0)
+			{
+				Debug.LogWarning("PathVisualizer: Cache is empty, nothing to draw.");
+				ClearPath();
+				ClearExtraRenderers();
+				return;
+			}
 
-            List<Vector3> pathPositions = new List<Vector3>();
-            foreach (var node in path)
-            {
-                if (node != null)
-                    pathPositions.Add(node.transform.position + Vector3.up * heightOffset);
-            }
+			// Ensure we have enough line renderers (primary + extras)
+			EnsureRendererCount(cache.Count);
 
-            // Create smooth path with enough points
-            List<Vector3> smoothPath = CreateSmoothPath(pathPositions);
+			int index = 0;
+			foreach (var kvp in cache)
+			{
+				LineRenderer lr = index == 0 ? lineRenderer : extraLineRenderers[index - 1];
+				Material mat = index == 0 ? lineMaterial : extraMaterials[index - 1];
+				ApplyPathToRenderer(lr, mat, kvp.Value);
+				index++;
+			}
 
-            lineRenderer.positionCount = smoothPath.Count;
-            lineRenderer.SetPositions(smoothPath.ToArray());
+			Debug.Log($"PathVisualizer: Drew {cache.Count} cached paths");
+		}
 
-            // Calculate texture tiling
-            float totalLength = CalculatePathLength(pathPositions);
-            float tilingFactor = totalLength / (dashLength + gapLength);
-            lineMaterial.mainTextureScale = new Vector2(tilingFactor, 1f);
-        }
+		/// <summary>
+		/// Make sure we have exactly <paramref name="count"/> renderers available
+		/// (primary + extras).
+		/// </summary>
+		private void EnsureRendererCount(int count)
+		{
+			int needed = count - 1; // primary covers the first path
 
-        private List<Vector3> CreateSmoothPath(List<Vector3> waypoints)
-        {
-            List<Vector3> smoothPath = new List<Vector3>();
+			// Add missing renderers
+			while (extraLineRenderers.Count < needed)
+			{
+				GameObject go = new GameObject($"PathVisualizer_Extra_{extraLineRenderers.Count}");
+				go.transform.SetParent(transform, false);
 
-            for (int i = 0; i < waypoints.Count - 1; i++)
-            {
-                Vector3 start = waypoints[i];
-                Vector3 end = waypoints[i + 1];
-                float distance = Vector3.Distance(start, end);
-                int points = Mathf.Max(2, Mathf.CeilToInt(distance * pointsPerUnit));
+				LineRenderer lr = go.AddComponent<LineRenderer>();
+				Material mat = CreateLineMaterial();
 
-                for (int j = 0; j < points; j++)
-                {
-                    float t = j / (float)points;
-                    smoothPath.Add(Vector3.Lerp(start, end, t));
-                }
-            }
+				ConfigureLineRenderer(lr, mat);
 
-            // Add final point
-            smoothPath.Add(waypoints[waypoints.Count - 1]);
+				extraLineRenderers.Add(lr);
+				extraMaterials.Add(mat);
+			}
 
-            return smoothPath;
-        }
+			// Hide surplus renderers
+			for (int i = needed; i < extraLineRenderers.Count; i++)
+				extraLineRenderers[i].positionCount = 0;
+		}
 
-        private float CalculatePathLength(List<Vector3> positions)
-        {
-            float length = 0f;
-            for (int i = 0; i < positions.Count - 1; i++)
-            {
-                length += Vector3.Distance(positions[i], positions[i + 1]);
-            }
-            return length;
-        }
+		// ── Shared helpers ────────────────────────────────────────────────────
 
-        private void Update()
-        {
-            if (animateLine && lineRenderer.positionCount > 0 && lineMaterial != null)
-            {
-                // Scroll the texture offset for moving animation (negative for forward direction)
-                animationOffset -= scrollSpeed * Time.deltaTime;
-                lineMaterial.mainTextureOffset = new Vector2(animationOffset, 0f);
-            }
-        }
+		private void ApplyPathToRenderer(LineRenderer lr, Material mat, List<PathNode> path)
+		{
+			if (path == null || path.Count < 2)
+			{
+				lr.positionCount = 0;
+				return;
+			}
 
-        public void ClearPath()
-        {
-            if (lineRenderer != null)
-                lineRenderer.positionCount = 0;
-        }
+			List<Vector3> rawPositions = new List<Vector3>();
+			foreach (var node in path)
+			{
+				if (node != null)
+					rawPositions.Add(node.transform.position + Vector3.up * heightOffset);
+			}
 
-        public void SetPathColor(Color color)
-        {
-            lineColor = color;
-            if (lineRenderer != null)
-            {
-                lineRenderer.startColor = color;
-                lineRenderer.endColor = color;
-                if (lineMaterial != null)
-                    lineMaterial.color = color;
-            }
-        }
+			List<Vector3> smooth = CreateSmoothPath(rawPositions);
+			lr.positionCount = smooth.Count;
+			lr.SetPositions(smooth.ToArray());
 
-        public void SetLineWidth(float width)
-        {
-            lineWidth = width;
-            if (lineRenderer != null)
-            {
-                lineRenderer.startWidth = width;
-                lineRenderer.endWidth = width;
-            }
-        }
+			float totalLength = CalculatePathLength(rawPositions);
+			float tilingFactor = totalLength / (dashLength + gapLength);
+			mat.mainTextureScale = new Vector2(tilingFactor, 1f);
+		}
 
-        public void ToggleAnimation(bool enabled)
-        {
-            animateLine = enabled;
-        }
+		#endregion
 
-        private void OnDestroy()
-        {
-            if (lineMaterial != null)
-            {
-                if (lineMaterial.mainTexture != null)
-                    Destroy(lineMaterial.mainTexture);
-                Destroy(lineMaterial);
-            }
-        }
+		#region Line Renderer Setup
 
-        // Editor helper - call this from inspector button or context menu
-        [ContextMenu("Refresh Path Now")]
-        private void RefreshPathFromContextMenu()
-        {
-            if (Application.isPlaying)
-            {
-                InitializeAndDrawPath();
-            }
-        }
-    }
+		private void SetupLineRenderer()
+		{
+			lineRenderer = GetComponent<LineRenderer>();
+			if (lineRenderer == null)
+				lineRenderer = gameObject.AddComponent<LineRenderer>();
+
+			lineMaterial = CreateLineMaterial();
+			ConfigureLineRenderer(lineRenderer, lineMaterial);
+		}
+
+		private Material CreateLineMaterial()
+		{
+			Shader shader = Shader.Find("Particles/Standard Unlit") ?? Shader.Find("Sprites/Default");
+			Material mat = new Material(shader);
+			mat.color = lineColor;
+			CreateDashTexture(mat);
+			return mat;
+		}
+
+		private void ConfigureLineRenderer(LineRenderer lr, Material mat)
+		{
+			lr.startWidth = lineWidth;
+			lr.endWidth = lineWidth;
+			lr.material = mat;
+			lr.startColor = lineColor;
+			lr.endColor = lineColor;
+			lr.numCornerVertices = 5;
+			lr.numCapVertices = 5;
+			lr.useWorldSpace = true;
+			lr.textureMode = LineTextureMode.Tile;
+			lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			lr.receiveShadows = false;
+			lr.sortingOrder = 1000;
+		}
+
+		private void CreateDashTexture(Material mat)
+		{
+			int width = 64;
+			int height = 4;
+			Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+			tex.wrapMode = TextureWrapMode.Repeat;
+
+			float dashRatio = dashLength / (dashLength + gapLength);
+			int dashPixels = Mathf.RoundToInt(width * dashRatio);
+
+			for (int x = 0; x < width; x++)
+			{
+				Color c = x < dashPixels ? Color.white : Color.clear;
+				for (int y = 0; y < height; y++)
+					tex.SetPixel(x, y, c);
+			}
+
+			tex.Apply();
+			mat.mainTexture = tex;
+		}
+
+		#endregion
+
+		#region Cleanup
+
+		public void ClearPath()
+		{
+			if (lineRenderer != null)
+				lineRenderer.positionCount = 0;
+		}
+
+		private void ClearExtraRenderers()
+		{
+			foreach (var lr in extraLineRenderers)
+				if (lr != null) lr.positionCount = 0;
+		}
+
+		private void DestroyExtraRenderers()
+		{
+			foreach (var mat in extraMaterials)
+				DestroyLineMaterial(mat);
+
+			extraMaterials.Clear();
+
+			foreach (var lr in extraLineRenderers)
+				if (lr != null) Destroy(lr.gameObject);
+
+			extraLineRenderers.Clear();
+		}
+
+		private void DestroyLineMaterial(Material mat)
+		{
+			if (mat == null) return;
+			if (mat.mainTexture != null) Destroy(mat.mainTexture);
+			Destroy(mat);
+		}
+
+		#endregion
+
+		#region Math Helpers
+
+		private List<Vector3> CreateSmoothPath(List<Vector3> waypoints)
+		{
+			List<Vector3> smooth = new List<Vector3>();
+
+			for (int i = 0; i < waypoints.Count - 1; i++)
+			{
+				Vector3 start = waypoints[i];
+				Vector3 end = waypoints[i + 1];
+				int points = Mathf.Max(2, Mathf.CeilToInt(Vector3.Distance(start, end) * pointsPerUnit));
+
+				for (int j = 0; j < points; j++)
+					smooth.Add(Vector3.Lerp(start, end, j / (float)points));
+			}
+
+			smooth.Add(waypoints[waypoints.Count - 1]);
+			return smooth;
+		}
+
+		private float CalculatePathLength(List<Vector3> positions)
+		{
+			float length = 0f;
+			for (int i = 0; i < positions.Count - 1; i++)
+				length += Vector3.Distance(positions[i], positions[i + 1]);
+			return length;
+		}
+
+		#endregion
+
+		#region Public API
+
+		public void SetPathToVisualize(int startIdx, int endIdx)
+		{
+			startNodeIndex = startIdx;
+			endNodeIndex = endIdx;
+			drawAllPaths = false;
+			InitializeAndDrawPath();
+		}
+
+		public void SetPathToVisualize(PathNode startNode, PathNode endNode)
+		{
+			currentStartNode = startNode;
+			currentEndNode = endNode;
+			drawAllPaths = false;
+			RefreshPath();
+		}
+
+		public void SetDrawAllPaths(bool value)
+		{
+			drawAllPaths = value;
+			RefreshPath();
+		}
+
+		public void SetLineColor(Color color)
+		{
+			lineColor = color;
+			lineRenderer.startColor = color;
+			lineRenderer.endColor = color;
+			if (lineMaterial != null) lineMaterial.color = color;
+		}
+
+		public void SetLineWidth(float width)
+		{
+			lineWidth = width;
+			lineRenderer.startWidth = width;
+			lineRenderer.endWidth = width;
+		}
+
+		public void ToggleAnimation(bool enabled) => animateLine = enabled;
+
+		[ContextMenu("Refresh Path Now")]
+		private void RefreshPathFromContextMenu()
+		{
+			if (Application.isPlaying) InitializeAndDrawPath();
+		}
+
+		#endregion
+	}
 }

@@ -19,7 +19,7 @@ MonoBehaviour:
   - coords: {x: 0, y: 0}
     type: 4
   - coords: {x: 0, y: 14}
-    type: 6
+    type: 4
   - coords: {x: 1, y: 14}
     type: 6
   - coords: {x: 2, y: 14}
@@ -119,21 +119,21 @@ MonoBehaviour:
   - coords: {x: 2, y: 11}
     type: 6
   - coords: {x: 3, y: 11}
-    type: 6
+    type: 2
   - coords: {x: 4, y: 11}
-    type: 6
+    type: 2
   - coords: {x: 5, y: 11}
-    type: 6
+    type: 2
   - coords: {x: 6, y: 11}
-    type: 6
+    type: 2
   - coords: {x: 7, y: 11}
     type: 6
   - coords: {x: 8, y: 11}
     type: 6
   - coords: {x: 9, y: 11}
-    type: 6
+    type: 2
   - coords: {x: 10, y: 11}
-    type: 6
+    type: 2
   - coords: {x: 13, y: 11}
     type: 6
   - coords: {x: 14, y: 11}
@@ -147,19 +147,19 @@ MonoBehaviour:
   - coords: {x: 11, y: 10}
     type: 6
   - coords: {x: 10, y: 10}
-    type: 6
+    type: 2
   - coords: {x: 9, y: 10}
-    type: 6
+    type: 2
   - coords: {x: 8, y: 10}
     type: 6
   - coords: {x: 7, y: 10}
     type: 6
   - coords: {x: 6, y: 10}
-    type: 6
+    type: 2
   - coords: {x: 5, y: 10}
-    type: 6
+    type: 2
   - coords: {x: 4, y: 10}
-    type: 6
+    type: 2
   - coords: {x: 0, y: 10}
     type: 6
   - coords: {x: 1, y: 10}
@@ -167,13 +167,13 @@ MonoBehaviour:
   - coords: {x: 2, y: 10}
     type: 6
   - coords: {x: 3, y: 10}
-    type: 6
+    type: 2
   - coords: {x: 8, y: 9}
     type: 6
   - coords: {x: 9, y: 9}
-    type: 6
+    type: 2
   - coords: {x: 10, y: 9}
-    type: 6
+    type: 2
   - coords: {x: 11, y: 9}
     type: 6
   - coords: {x: 12, y: 9}
@@ -185,13 +185,13 @@ MonoBehaviour:
   - coords: {x: 7, y: 9}
     type: 6
   - coords: {x: 6, y: 9}
-    type: 6
+    type: 2
   - coords: {x: 5, y: 9}
-    type: 6
+    type: 2
   - coords: {x: 4, y: 9}
-    type: 6
+    type: 2
   - coords: {x: 3, y: 9}
-    type: 6
+    type: 2
   - coords: {x: 2, y: 9}
     type: 6
   - coords: {x: 1, y: 9}
@@ -217,9 +217,9 @@ MonoBehaviour:
   - coords: {x: 8, y: 7}
     type: 6
   - coords: {x: 9, y: 7}
-    type: 6
+    type: 2
   - coords: {x: 10, y: 7}
-    type: 6
+    type: 2
   - coords: {x: 11, y: 7}
     type: 6
   - coords: {x: 12, y: 7}
@@ -237,9 +237,9 @@ MonoBehaviour:
   - coords: {x: 11, y: 8}
     type: 6
   - coords: {x: 10, y: 8}
-    type: 6
+    type: 2
   - coords: {x: 9, y: 8}
-    type: 6
+    type: 2
   - coords: {x: 8, y: 8}
     type: 6
   - coords: {x: 3, y: 7}
@@ -259,7 +259,7 @@ MonoBehaviour:
   - coords: {x: 7, y: 7}
     type: 6
   - coords: {x: 10, y: 6}
-    type: 6
+    type: 2
   - coords: {x: 11, y: 6}
     type: 6
   - coords: {x: 12, y: 6}
@@ -269,19 +269,19 @@ MonoBehaviour:
   - coords: {x: 14, y: 6}
     type: 6
   - coords: {x: 9, y: 6}
-    type: 6
+    type: 2
   - coords: {x: 8, y: 6}
     type: 6
   - coords: {x: 7, y: 6}
     type: 6
   - coords: {x: 6, y: 6}
-    type: 6
+    type: 2
   - coords: {x: 5, y: 6}
-    type: 6
+    type: 2
   - coords: {x: 4, y: 6}
-    type: 6
+    type: 2
   - coords: {x: 3, y: 6}
-    type: 6
+    type: 2
   - coords: {x: 2, y: 6}
     type: 6
   - coords: {x: 1, y: 6}
@@ -295,21 +295,21 @@ MonoBehaviour:
   - coords: {x: 2, y: 5}
     type: 6
   - coords: {x: 3, y: 5}
-    type: 6
+    type: 2
   - coords: {x: 4, y: 5}
-    type: 6
+    type: 2
   - coords: {x: 5, y: 5}
-    type: 6
+    type: 2
   - coords: {x: 6, y: 5}
-    type: 6
+    type: 2
   - coords: {x: 7, y: 5}
     type: 6
   - coords: {x: 8, y: 5}
     type: 6
   - coords: {x: 9, y: 5}
-    type: 6
+    type: 2
   - coords: {x: 10, y: 5}
-    type: 6
+    type: 2
   - coords: {x: 11, y: 4}
     type: 6
   - coords: {x: 12, y: 4}
@@ -333,21 +333,21 @@ MonoBehaviour:
   - coords: {x: 2, y: 4}
     type: 6
   - coords: {x: 3, y: 4}
-    type: 6
+    type: 2
   - coords: {x: 4, y: 4}
-    type: 6
+    type: 2
   - coords: {x: 5, y: 4}
-    type: 6
+    type: 2
   - coords: {x: 6, y: 4}
-    type: 6
+    type: 2
   - coords: {x: 7, y: 4}
     type: 6
   - coords: {x: 8, y: 4}
     type: 6
   - coords: {x: 9, y: 4}
-    type: 6
+    type: 2
   - coords: {x: 10, y: 4}
-    type: 6
+    type: 2
   - coords: {x: 13, y: 3}
     type: 6
   - coords: {x: 14, y: 3}
@@ -457,7 +457,7 @@ MonoBehaviour:
   - coords: {x: 11, y: 0}
     type: 6
   - coords: {x: 14, y: 0}
-    type: 6
+    type: 5
   - coords: {x: 13, y: 0}
     type: 6
   - coords: {x: 12, y: 0}
@@ -468,7 +468,9 @@ MonoBehaviour:
     type: 6
   spawnPoints:
   - {x: 0, y: 0}
+  - {x: 0, y: 14}
   exitPoints:
   - {x: 14, y: 14}
+  - {x: 14, y: 0}
   startingCurrency: 500
   startingLives: 20
