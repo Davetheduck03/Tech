@@ -66,6 +66,7 @@ namespace TowerDefenseTK
             yield return new WaitForEndOfFrame();
 
             InitializePlayerResources();
+            ApplyWaveConfigs();
 
             if (spawnVisuals)
             {
@@ -189,5 +190,46 @@ namespace TowerDefenseTK
         {
             return GetTileTypeAt(worldPos) == TileType.Hybrid;
         }
+        /// <summary>
+        /// Applies wave configs from MapData to matching EnemySpawner instances in the scene.
+        /// Matches each spawn point to the closest EnemySpawner by world position.
+        /// </summary>
+        private void ApplyWaveConfigs()
+        {
+            if (mapData.spawnerWaves == null || mapData.spawnerWaves.Count == 0) return;
+
+            EnemySpawner[] spawners = FindObjectsByType<EnemySpawner>(FindObjectsSortMode.None);
+            if (spawners.Length == 0) return;
+
+            for (int i = 0; i < mapData.spawnPoints.Count; i++)
+            {
+                if (i >= mapData.spawnerWaves.Count) break;
+                if (mapData.spawnerWaves[i].waves == null || mapData.spawnerWaves[i].waves.Count == 0) continue;
+
+                Vector3 worldPos = GetWorldPosition(mapData.spawnPoints[i]);
+                EnemySpawner closest = GetClosestSpawner(spawners, worldPos);
+
+                if (closest != null)
+                {
+                    closest.Waves.Clear();
+                    closest.Waves.AddRange(mapData.spawnerWaves[i].waves);
+                    Debug.Log($"MapLoader: Applied {mapData.spawnerWaves[i].waves.Count} wave(s) to spawner '{closest.name}'");
+                }
+            }
+        }
+
+        private EnemySpawner GetClosestSpawner(EnemySpawner[] spawners, Vector3 pos)
+        {
+            EnemySpawner best = null;
+            float bestDist = float.MaxValue;
+            foreach (EnemySpawner s in spawners)
+            {
+                float d = Vector3.Distance(s.transform.position, pos);
+                if (d < bestDist) { bestDist = d; best = s; }
+            }
+            return best;
+        }
+
+
     }
 }

@@ -1,28 +1,41 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace TowerDefenseTK
 {
     /// <summary>
+    /// Per-wave configuration. Each entry in EnemySpawner.waves defines one wave.
+    /// When all waves are exhausted, the last wave repeats indefinitely.
+    /// </summary>
+    [System.Serializable]
+    public class WaveConfig
+    {
+        public string waveName = "Wave";
+        public string enemyPoolName = "Basic Enemy";
+        [Min(1)] public int enemyCount = 5;
+        [Min(0f)] public float spawnInterval = 0.5f;
+        [Min(0f)] public float cooldownAfter = 10f;
+    }
+
+    /// <summary>
     /// Spawns enemies at a start node and directs them to an assigned or auto-detected end node.
-    /// If no end node is assigned, finds the closest reachable end node via Astar.
-    /// Attach this to your Start/Spawn PathNode GameObject.
+    /// Configure per-wave behaviour via the Waves list in the Inspector.
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
-        [Header("Spawn Settings")]
-        [SerializeField] private string enemyPoolName = "Basic Enemy";
-        [SerializeField] private int enemiesToSpawn = 5;
-        [SerializeField] private float spawnInterval = 0.5f;
-        [SerializeField] private float waveCooldown = 10f;
-        [SerializeField] private bool spawnOnStart = true;
+        [Header("Waves")]
+        [SerializeField] private List<WaveConfig> waves = new List<WaveConfig>()
+        {
+            new WaveConfig()
+        };
 
         [Header("Target Settings")]
         [Tooltip("Assign a specific end node. If empty, finds the closest reachable end node via Astar.")]
         [SerializeField] private Transform assignedEndNode;
 
         [Header("Initialization")]
+        [SerializeField] private bool spawnOnStart = true;
         [Tooltip("If true, auto-initializes when Astar finishes computing paths. If false, call Init() manually.")]
         [SerializeField] private bool autoInitialize = true;
 
@@ -42,12 +55,12 @@ namespace TowerDefenseTK
         public bool IsSpawning => isSpawning;
         public Transform TargetEndNode => targetEndNode;
         public bool IsInitialized => isInitialized;
+        public List<WaveConfig> Waves => waves;
 
         #region Unity Lifecycle
 
         private void OnEnable()
         {
-            // Subscribe to grid generation event
             PathNodeGenerator.OnGridGenerated += OnGridGenerated;
         }
 
@@ -58,7 +71,6 @@ namespace TowerDefenseTK
 
         private void Start()
         {
-            // If grid is already generated (spawner added late), try to initialize
             if (autoInitialize && PathNodeGenerator.Instance != null && !isInitialized)
             {
                 StartCoroutine(DelayedInit());
@@ -73,18 +85,11 @@ namespace TowerDefenseTK
             }
         }
 
-        /// <summary>
-        /// Delay initialization to ensure Astar has computed paths
-        /// </summary>
         private IEnumerator DelayedInit()
         {
-            // Wait for Astar to finish computing paths
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
-
-            // Extra wait to ensure paths are cached
             yield return new WaitForSeconds(0.1f);
-
             Init();
         }
 
@@ -99,50 +104,39 @@ namespace TowerDefenseTK
             if (showDebugLogs)
                 Debug.Log($"EnemySpawner '{name}': Initializing...");
 
-            // Get our start PathNode
             startPathNode = GetComponent<PathNode>()
                          ?? GetComponentInParent<PathNode>()
                          ?? GetPathNodeAtPosition(transform.position);
 
             if (startPathNode == null)
             {
-                Debug.LogError($"EnemySpawner '{name}': No PathNode found at spawn position! " +
-                              "Make sure this spawner is on or under a PathNode, or the PathNodeGenerator has run.");
+                Debug.LogError($"EnemySpawner '{name}': No PathNode found at spawn position!");
                 return;
             }
 
-            if (showDebugLogs)
-                Debug.Log($"EnemySpawner '{name}': Found start node '{startPathNode.name}'");
-
-            // Setup end node (assigned or find closest)
             if (!SetupEndNode())
             {
-                Debug.LogError($"EnemySpawner '{name}': Could not find valid end node! " +
-                              "Make sure there's at least one Exit node and a valid path exists.");
+                Debug.LogError($"EnemySpawner '{name}': Could not find valid end node!");
                 return;
             }
 
             isInitialized = true;
 
             if (showDebugLogs)
-                Debug.Log($"EnemySpawner '{name}': ✓ Initialized → Target: {targetEndNode.name}");
+                Debug.Log($"EnemySpawner '{name}': Initialized → Target: {targetEndNode.name}");
 
             if (spawnOnStart)
-            {
                 StartCoroutine(SpawnWaves());
-            }
         }
 
         private bool SetupEndNode()
         {
-            // Wait for Astar if not ready
             if (Astar.Instance == null)
             {
-                Debug.LogWarning("EnemySpawner: Astar.Instance is null! Cannot setup end node yet.");
+                Debug.LogWarning("EnemySpawner: Astar.Instance is null!");
                 return false;
             }
 
-            // Option 1: Use assigned end node if valid
             if (assignedEndNode != null)
             {
                 endPathNode = assignedEndNode.GetComponent<PathNode>()
@@ -151,39 +145,25 @@ namespace TowerDefenseTK
                 if (endPathNode != null && IsPathValid(startPathNode, endPathNode))
                 {
                     targetEndNode = assignedEndNode;
-
-                    if (showDebugLogs)
-                        Debug.Log($"EnemySpawner: Using assigned end node '{assignedEndNode.name}'");
-
                     return true;
                 }
 
                 Debug.LogWarning($"EnemySpawner: Assigned end node '{assignedEndNode.name}' not reachable, finding closest...");
             }
 
-            // Option 2: Find closest reachable end node via Astar
             return FindClosestEndNode();
         }
 
         private bool FindClosestEndNode()
         {
-            if (Astar.Instance == null)
-            {
-                Debug.LogError("EnemySpawner: Astar.Instance is null!");
-                return false;
-            }
+            if (Astar.Instance == null) return false;
 
-            // Get all registered end nodes
             if (!NodeGetter.nodeValue.ContainsKey(NodeType.End) ||
                 NodeGetter.nodeValue[NodeType.End].Count == 0)
             {
-                Debug.LogError("EnemySpawner: No end nodes registered in NodeGetter! " +
-                              "Make sure you have Exit tiles in your MapData.");
+                Debug.LogError("EnemySpawner: No end nodes registered in NodeGetter!");
                 return false;
             }
-
-            if (showDebugLogs)
-                Debug.Log($"EnemySpawner: Searching {NodeGetter.nodeValue[NodeType.End].Count} end nodes...");
 
             PathNode closestNode = null;
             float shortestDistance = float.MaxValue;
@@ -192,22 +172,10 @@ namespace TowerDefenseTK
             {
                 if (endNode == null) continue;
 
-                // Get path via Astar
                 List<PathNode> path = Astar.Instance.GetPath(startPathNode, endNode);
+                if (path == null || path.Count == 0) continue;
 
-                if (path == null || path.Count == 0)
-                {
-                    if (showDebugLogs)
-                        Debug.Log($"EnemySpawner: No path to '{endNode.name}'");
-                    continue;
-                }
-
-                // Calculate total path distance
                 float distance = CalculatePathDistance(path);
-
-                if (showDebugLogs)
-                    Debug.Log($"EnemySpawner: Path to '{endNode.name}' = {distance:F1} units ({path.Count} nodes)");
-
                 if (distance < shortestDistance)
                 {
                     shortestDistance = distance;
@@ -219,10 +187,6 @@ namespace TowerDefenseTK
             {
                 endPathNode = closestNode;
                 targetEndNode = closestNode.transform;
-
-                if (showDebugLogs)
-                    Debug.Log($"EnemySpawner: ✓ Selected closest end node '{closestNode.name}' (distance: {shortestDistance:F1})");
-
                 return true;
             }
 
@@ -233,7 +197,6 @@ namespace TowerDefenseTK
         private bool IsPathValid(PathNode from, PathNode to)
         {
             if (Astar.Instance == null) return false;
-
             List<PathNode> path = Astar.Instance.GetPath(from, to);
             return path != null && path.Count > 0;
         }
@@ -241,27 +204,38 @@ namespace TowerDefenseTK
         private float CalculatePathDistance(List<PathNode> path)
         {
             if (path == null || path.Count < 2) return 0f;
-
             float total = 0f;
             for (int i = 0; i < path.Count - 1; i++)
-            {
                 total += Vector3.Distance(path[i].transform.position, path[i + 1].transform.position);
-            }
             return total;
         }
 
         private PathNode GetPathNodeAtPosition(Vector3 position)
         {
-            if (PathNodeGenerator.Instance != null)
-            {
-                return PathNodeGenerator.Instance.GetNodeAtWorldPosition(position);
-            }
-            return null;
+            return PathNodeGenerator.Instance != null
+                ? PathNodeGenerator.Instance.GetNodeAtWorldPosition(position)
+                : null;
         }
 
         #endregion
 
         #region Wave Spawning
+
+        /// <summary>
+        /// Returns the WaveConfig for the given 1-based wave number.
+        /// Clamps to the last defined wave when out of range.
+        /// </summary>
+        private WaveConfig GetConfigForWave(int waveNumber)
+        {
+            if (waves == null || waves.Count == 0)
+            {
+                // Fallback: single default wave
+                return new WaveConfig();
+            }
+
+            int index = Mathf.Clamp(waveNumber - 1, 0, waves.Count - 1);
+            return waves[index];
+        }
 
         private IEnumerator SpawnWaves()
         {
@@ -269,30 +243,34 @@ namespace TowerDefenseTK
 
             while (true)
             {
-                Debug.Log($"=== Wave {currentWave} starting ===");
+                WaveConfig config = GetConfigForWave(currentWave);
 
-                yield return StartCoroutine(SpawnWaveEnemies());
+                if (showDebugLogs)
+                    Debug.Log($"=== Wave {currentWave} starting: {config.enemyCount}x '{config.enemyPoolName}' ===");
 
-                Debug.Log($"=== Wave {currentWave} finished. Next wave in {waveCooldown}s ===");
+                yield return StartCoroutine(SpawnWaveEnemies(config));
 
-                yield return new WaitForSeconds(waveCooldown);
+                if (showDebugLogs)
+                    Debug.Log($"=== Wave {currentWave} finished. Next wave in {config.cooldownAfter}s ===");
+
+                yield return new WaitForSeconds(config.cooldownAfter);
 
                 currentWave++;
             }
         }
 
-        private IEnumerator SpawnWaveEnemies()
+        private IEnumerator SpawnWaveEnemies(WaveConfig config)
         {
-            for (int i = 0; i < enemiesToSpawn; i++)
+            for (int i = 0; i < config.enemyCount; i++)
             {
-                SpawnEnemy(i);
+                SpawnEnemy(i, config);
 
-                if (i < enemiesToSpawn - 1)
-                    yield return new WaitForSeconds(spawnInterval);
+                if (i < config.enemyCount - 1)
+                    yield return new WaitForSeconds(config.spawnInterval);
             }
         }
 
-        private void SpawnEnemy(int index)
+        private void SpawnEnemy(int index, WaveConfig config)
         {
             if (PoolManager.Instance == null)
             {
@@ -301,7 +279,7 @@ namespace TowerDefenseTK
             }
 
             GameObject spawnedEnemy = PoolManager.Instance.Spawn(
-                enemyPoolName,
+                config.enemyPoolName,
                 transform.position,
                 Quaternion.identity
             );
@@ -309,9 +287,8 @@ namespace TowerDefenseTK
             if (spawnedEnemy != null)
             {
                 if (showDebugLogs)
-                    Debug.Log($"Enemy {index + 1}/{enemiesToSpawn} spawned (Wave {currentWave}) → {targetEndNode.name}");
+                    Debug.Log($"Enemy {index + 1}/{config.enemyCount} spawned (Wave {currentWave}) → {targetEndNode.name}");
 
-                // Set target and trigger movement
                 MovementComponent movementComp = spawnedEnemy.GetComponent<MovementComponent>();
                 if (movementComp != null)
                 {
@@ -320,13 +297,12 @@ namespace TowerDefenseTK
                 }
                 else
                 {
-                    Debug.LogWarning($"EnemySpawner: Spawned enemy has no MovementComponent!");
+                    Debug.LogWarning("EnemySpawner: Spawned enemy has no MovementComponent!");
                 }
             }
             else
             {
-                Debug.LogError($"EnemySpawner: Failed to spawn enemy from pool '{enemyPoolName}'! " +
-                              "Check that the pool exists in PoolManager.");
+                Debug.LogError($"EnemySpawner: Failed to spawn from pool '{config.enemyPoolName}'!");
             }
         }
 
@@ -334,49 +310,31 @@ namespace TowerDefenseTK
 
         #region Public Methods
 
-        /// <summary>
-        /// Manually trigger wave spawning
-        /// </summary>
         public void TriggerSpawn()
         {
             if (!isInitialized) Init();
-
             if (!isSpawning && isInitialized)
-            {
                 StartCoroutine(SpawnWaves());
-            }
         }
 
-        /// <summary>
-        /// Stop spawning waves
-        /// </summary>
         public void StopSpawning()
         {
             StopAllCoroutines();
             isSpawning = false;
         }
 
-        /// <summary>
-        /// Change end node at runtime
-        /// </summary>
         public void SetEndNode(Transform newEndNode)
         {
             assignedEndNode = newEndNode;
             if (isInitialized) SetupEndNode();
         }
 
-        /// <summary>
-        /// Recalculate path (call after map changes)
-        /// </summary>
         public void RecalculatePath()
         {
             if (!isInitialized) return;
             SetupEndNode();
         }
 
-        /// <summary>
-        /// Force re-initialization
-        /// </summary>
         public void Reinitialize()
         {
             isInitialized = false;
@@ -384,14 +342,18 @@ namespace TowerDefenseTK
         }
 
         /// <summary>
-        /// Configure spawner settings (called by PathNodeGenerator when auto-attaching)
+        /// Legacy configure method — populates Wave 1 for backwards compatibility.
         /// </summary>
         public void Configure(string poolName, int enemyCount, float interval, float cooldown, bool autoInit = true)
         {
-            enemyPoolName = poolName;
-            enemiesToSpawn = enemyCount;
-            spawnInterval = interval;
-            waveCooldown = cooldown;
+            if (waves == null) waves = new List<WaveConfig>();
+            if (waves.Count == 0) waves.Add(new WaveConfig());
+
+            waves[0].enemyPoolName = poolName;
+            waves[0].enemyCount    = enemyCount;
+            waves[0].spawnInterval = interval;
+            waves[0].cooldownAfter = cooldown;
+
             autoInitialize = autoInit;
         }
 
@@ -401,16 +363,13 @@ namespace TowerDefenseTK
 
         private void OnDrawGizmos()
         {
-            // Draw spawn point
             Gizmos.color = isInitialized ? Color.green : Color.blue;
             Gizmos.DrawWireSphere(transform.position, 0.5f);
 
-            // Draw "S" label
 #if UNITY_EDITOR
             UnityEditor.Handles.Label(transform.position + Vector3.up * 1f, "SPAWN");
 #endif
 
-            // Draw line to assigned end node
             if (assignedEndNode != null)
             {
                 Gizmos.color = Color.yellow;
@@ -421,7 +380,6 @@ namespace TowerDefenseTK
 
         private void OnDrawGizmosSelected()
         {
-            // In play mode, show actual target and path
             if (Application.isPlaying && targetEndNode != null)
             {
                 Gizmos.color = Color.cyan;
@@ -429,7 +387,6 @@ namespace TowerDefenseTK
                                targetEndNode.position + Vector3.up * 0.5f);
                 Gizmos.DrawWireSphere(targetEndNode.position, 0.6f);
 
-                // Draw path if available
                 if (Astar.Instance != null && startPathNode != null && endPathNode != null)
                 {
                     List<PathNode> path = Astar.Instance.GetPath(startPathNode, endPathNode);

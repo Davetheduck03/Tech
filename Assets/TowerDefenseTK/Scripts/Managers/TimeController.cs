@@ -103,7 +103,7 @@ namespace TowerDefenseTK
             isPaused = true;
             Time.timeScale = 0f;
             
-            Debug.Log("TimeController: ⏸ PAUSED");
+            Debug.Log("TimeController: PAUSED");
             OnPauseStateChanged?.Invoke(true);
         }
 
@@ -115,7 +115,7 @@ namespace TowerDefenseTK
             isPaused = false;
             ApplyTimeScale();
             
-            Debug.Log($"TimeController: ▶ RESUMED at {CurrentSpeed}x");
+            Debug.Log($"TimeController: RESUMED at {CurrentSpeed}x");
             OnPauseStateChanged?.Invoke(false);
         }
 
@@ -139,7 +139,7 @@ namespace TowerDefenseTK
                 currentSpeedIndex = newIndex;
                 ApplyTimeScale();
                 
-                Debug.Log($"TimeController: ⏩ Speed: {CurrentSpeed}x");
+                Debug.Log($"TimeController: Speed Up: {CurrentSpeed}x");
                 OnSpeedChanged?.Invoke(CurrentSpeed);
             }
         }
@@ -160,7 +160,7 @@ namespace TowerDefenseTK
                 currentSpeedIndex = newIndex;
                 ApplyTimeScale();
                 
-                Debug.Log($"TimeController: ⏪ Speed: {CurrentSpeed}x");
+                Debug.Log($"TimeController: Speed Down: {CurrentSpeed}x");
                 OnSpeedChanged?.Invoke(CurrentSpeed);
             }
         }
@@ -174,7 +174,7 @@ namespace TowerDefenseTK
             currentSpeedIndex = defaultSpeedIndex;
             ApplyTimeScale();
             
-            Debug.Log($"TimeController: ▶ Normal speed: {CurrentSpeed}x");
+            Debug.Log($"TimeController: Normal speed: {CurrentSpeed}x");
             OnSpeedChanged?.Invoke(CurrentSpeed);
             OnPauseStateChanged?.Invoke(false);
         }
@@ -255,14 +255,14 @@ namespace TowerDefenseTK
         /// </summary>
         public string GetSpeedLabel()
         {
-            if (isPaused) return "⏸";
-            
+            if (isPaused) return "|| Paused";
+
             return CurrentSpeed switch
             {
-                0f => "⏸",
-                1f => "▶",
-                2f => "▶▶",
-                3f => "▶▶▶",
+                0f => "Paused",
+                1f => ">",
+                2f => ">>",
+                3f => ">>>",
                 _ => $"{CurrentSpeed}x"
             };
         }

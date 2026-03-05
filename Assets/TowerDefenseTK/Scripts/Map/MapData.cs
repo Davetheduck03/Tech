@@ -25,6 +25,23 @@ namespace TowerDefenseTK
 		public int startingCurrency = 500;
 		public int startingLives = 20;
 
+		[Header("Wave Data")]
+		[Tooltip("One entry per spawn point. Auto-synced with spawnPoints count.")]
+		public List<SpawnerWaveData> spawnerWaves = new List<SpawnerWaveData>();
+
+		/// <summary>
+		/// Ensures spawnerWaves length matches spawnPoints length.
+		/// Call after adding/removing spawn points.
+		/// </summary>
+		public void SyncSpawnerWaves()
+		{
+			while (spawnerWaves.Count < spawnPoints.Count)
+				spawnerWaves.Add(new SpawnerWaveData());
+
+			while (spawnerWaves.Count > spawnPoints.Count)
+				spawnerWaves.RemoveAt(spawnerWaves.Count - 1);
+		}
+
 		/// <summary>
 		/// Get tile at coordinates, returns null if not found
 		/// </summary>
@@ -179,4 +196,11 @@ namespace TowerDefenseTK
 		Exit,       // Enemy exit point (walkable, NOT buildable)
 		Hybrid      // Walkable AND buildable - tower placement blocks the path
 	}
+	[Serializable]
+	public class SpawnerWaveData
+	{
+		[Tooltip("Waves for this spawn point. Last wave repeats when all are exhausted.")]
+		public List<WaveConfig> waves = new List<WaveConfig>() { new WaveConfig() };
+	}
+
 }
