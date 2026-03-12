@@ -32,6 +32,11 @@ namespace TowerDefenseTK
         private float lastFireTime;
         private float targetUpdateTimer;
 
+        // Support tower aura
+        [Header("Support Tower")]
+        [SerializeField] private LayerMask enemyLayer;
+        private float supportPulseTimer;
+
         public void Init(TowerUnit parent)
         {
             parentTower = parent;
@@ -62,7 +67,7 @@ namespace TowerDefenseTK
 
         private void ResourceTick()
         {
-            throw new NotImplementedException();
+            // TODO: passively generate gold over time
         }
 
         #region AOE Func
@@ -120,9 +125,27 @@ namespace TowerDefenseTK
 
         #endregion
 
+        /// <summary>
+        /// Pulses the tower's StatusEffectSO aura every 0.5 s onto all enemies in range.
+        /// Assign a StatusEffectSO to the tower's SO to enable this (Slow, Stun, DOT all work).
+        /// If no effect is assigned the support tower does nothing — add one via the inspector.
+        /// </summary>
         private void SupportTick()
         {
-            throw new NotImplementedException();
+            const float PulseInterval = 0.5f;
+
+            supportPulseTimer += Time.deltaTime;
+            if (supportPulseTimer < PulseInterval) return;
+            supportPulseTimer = 0f;
+
+            StatusEffectSO effect = parentTower.towerSO.statusEffect;
+            if (effect == null) return; // no effect configured — nothing to do
+
+            Collider[] hits = Physics.OverlapSphere(transform.position, parentTower.towerSO.range, enemyLayer);
+            foreach (var hit in hits)
+            {
+                hit.GetComponent<StatusEffectComponent>()?.Apply(effect);
+            }
         }
 
         #region Recoil

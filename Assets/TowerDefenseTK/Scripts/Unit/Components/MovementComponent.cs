@@ -16,10 +16,22 @@ namespace TowerDefenseTK
         [Tooltip("Assign a Transform that represents the movement goal (e.g. the end waypoint).")]
         public Transform targetTransform;
 
+        // Cached status effect component — may be null on enemies that don't need it
+        private StatusEffectComponent statusEffect;
+
+        /// <summary>
+        /// The actual speed after applying any active status effects.
+        /// Returns 0 when stunned so UnitPathFollower pauses movement.
+        /// UnitPathFollower reads this every frame so effects kick in immediately.
+        /// </summary>
+        public float EffectiveSpeed =>
+            statusEffect != null ? movement_Speed * statusEffect.GetSpeedMultiplier() : movement_Speed;
+
         protected override void OnInitialize()
         {
             movement_Speed = data.Speed;
             agent = GetComponent<UnitPathFollower>();
+            statusEffect = GetComponent<StatusEffectComponent>(); // may be null — that's fine
 
             var enemy = GetComponent<BaseEnemy>();
             if (enemy != null) enemy.isFlying = isFlying;

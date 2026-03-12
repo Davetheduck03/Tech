@@ -28,6 +28,11 @@ namespace TowerDefenseTK
         public int buildCost;
 
         public GameObject previewPrefab;
+
+        [Header("Status Effect")]
+        [Tooltip("Effect applied to enemies hit by this tower (turret/AoE: on hit, support: aura pulse).\n" +
+                 "Leave empty for no status effect. Create presets via TD Toolkit / Status Effect.")]
+        public StatusEffectSO statusEffect;
     }
 
     public enum TowerType

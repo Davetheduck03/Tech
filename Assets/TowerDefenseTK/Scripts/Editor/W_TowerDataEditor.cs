@@ -6,7 +6,7 @@ using TowerDefenseTK;
 
 public class TowerDataEditor : EditorWindow
 {
-    [MenuItem("Tools/Tower Data Editor (SO Manager)")]
+    [MenuItem("Tools/Tower Data Editor")]
     public static void ShowWindow()
     {
         GetWindow<TowerDataEditor>("Tower Data Editor");
@@ -27,22 +27,22 @@ public class TowerDataEditor : EditorWindow
 
     private void OnEnable()
     {
-        RefreshTowersFromManager();
+        RefreshTowers();
     }
 
     private void OnGUI()
     {
         DrawHeader();
 
-        if (GUILayout.Button("Refresh from SOManager", GUILayout.Height(30)))
+        if (GUILayout.Button("Refresh", GUILayout.Height(30)))
         {
-            RefreshTowersFromManager();
+            RefreshTowers();
         }
 
         if (towers.Count == 0)
         {
             EditorGUILayout.Space();
-            EditorGUILayout.HelpBox("No towers found in SOManager.towers\n\nMake sure SOManager is in Resources/Data/SOManager.asset and has towers assigned.", MessageType.Warning);
+            EditorGUILayout.HelpBox("No TowerSO assets found in the project.\n\nCreate one via  TD Toolkit / Units / Tower.", MessageType.Warning);
             return;
         }
 
@@ -70,13 +70,13 @@ public class TowerDataEditor : EditorWindow
         }
 
         EditorGUILayout.Space(5);
-        EditorGUILayout.LabelField($"{towers.Count} tower(s) loaded from SOManager", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"{towers.Count} TowerSO asset(s) found in project", EditorStyles.miniLabel);
     }
 
     private void DrawHeader()
     {
         EditorGUILayout.LabelField("Tower Data Editor", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Editing all towers from SOManager.towers", EditorStyles.centeredGreyMiniLabel);
+        EditorGUILayout.LabelField("Editing all TowerSO assets found in the project", EditorStyles.centeredGreyMiniLabel);
         EditorGUILayout.Space(10);
     }
 
@@ -310,25 +310,20 @@ public class TowerDataEditor : EditorWindow
         Debug.Log($"Created TowerUpgradeData for {tower.name} at {assetPath}");
     }
 
-    private void RefreshTowersFromManager()
+    private void RefreshTowers()
     {
         towers.Clear();
 
-        var manager = SOManager.Instance;
-        if (manager == null)
+        string[] guids = AssetDatabase.FindAssets("t:TowerSO");
+        foreach (string guid in guids)
         {
-            Debug.LogError("SOManager not found! Make sure it's at Resources/Data/SOManager.asset");
-            return;
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            TowerSO tower = AssetDatabase.LoadAssetAtPath<TowerSO>(path);
+            if (tower != null) towers.Add(tower);
         }
 
-        if (manager.towers != null && manager.towers.Count > 0)
-        {
-            // Filter out nulls and duplicates
-            towers = manager.towers
-                .Where(t => t != null)
-                .Distinct()
-                .ToList();
-        }
+        // Stable alphabetical order so columns don't shuffle on refresh
+        towers = towers.OrderBy(t => t.name).Distinct().ToList();
 
         Repaint();
     }

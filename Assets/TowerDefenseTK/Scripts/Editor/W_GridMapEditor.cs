@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using TowerDefenseTK;
@@ -12,7 +13,9 @@ public class W_GridMapEditor : EditorWindow
 		window.Show();
 	}
 
-	private MapData currentMap;
+	private List<MapData> maps        = new List<MapData>();
+	private int           selectedMap = 0;
+	private MapData currentMap => maps.Count > 0 && selectedMap < maps.Count ? maps[selectedMap] : null;
 	private Vector2 scrollPos;
 	private TileType selectedBrush = TileType.Path;
 	private int brushSize = 1;
@@ -68,20 +71,46 @@ public class W_GridMapEditor : EditorWindow
 		EditorGUILayout.LabelField("Design your tower defense map layout", EditorStyles.miniLabel);
 	}
 
+	private void OnEnable() => RefreshMaps();
+
 	private void DrawMapSelector()
 	{
 		EditorGUILayout.BeginHorizontal();
-		EditorGUILayout.LabelField("Map Data:", GUILayout.Width(70));
+		EditorGUILayout.LabelField($"Maps ({maps.Count})", EditorStyles.boldLabel, GUILayout.Width(80));
 
-		MapData newMap = (MapData)EditorGUILayout.ObjectField(currentMap, typeof(MapData), false);
-
-		if (newMap != currentMap)
+		if (GUILayout.Button("Refresh", GUILayout.Width(65), GUILayout.Height(18)))
 		{
-			currentMap = newMap;
-			Repaint();
+			RefreshMaps();
+			return;
 		}
 
 		EditorGUILayout.EndHorizontal();
+
+		if (maps.Count == 0) return;
+
+		string[] mapNames = new string[maps.Count];
+		for (int i = 0; i < maps.Count; i++)
+			mapNames[i] = maps[i] != null ? maps[i].name : "(null)";
+
+		int newSel = GUILayout.Toolbar(selectedMap, mapNames, GUILayout.Height(24));
+		if (newSel != selectedMap)
+		{
+			selectedMap = newSel;
+			Repaint();
+		}
+	}
+
+	private void RefreshMaps()
+	{
+		maps.Clear();
+		string[] guids = AssetDatabase.FindAssets("t:MapData");
+		foreach (string guid in guids)
+		{
+			MapData m = AssetDatabase.LoadAssetAtPath<MapData>(AssetDatabase.GUIDToAssetPath(guid));
+			if (m != null) maps.Add(m);
+		}
+		selectedMap = Mathf.Clamp(selectedMap, 0, Mathf.Max(0, maps.Count - 1));
+		Repaint();
 	}
 
 	private void DrawCreateNewMapButton()
@@ -106,7 +135,9 @@ public class W_GridMapEditor : EditorWindow
 				AssetDatabase.SaveAssets();
 				AssetDatabase.Refresh();
 
-				currentMap = newMap;
+				// Refresh the list so the new map appears in the toolbar
+				RefreshMaps();
+				selectedMap = maps.IndexOf(newMap);
 				Selection.activeObject = newMap;
 			}
 		}

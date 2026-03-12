@@ -220,7 +220,18 @@ namespace TowerDefenseTK
 							yield break;
 					}
 
-					transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
+					// Use EffectiveSpeed so status effects apply in real time.
+					// Falls back to the original moveSpeed if MovementComponent is not set.
+					float speed = movementComp != null ? movementComp.EffectiveSpeed : moveSpeed;
+
+					// Speed 0 means stunned — pause here until the stun wears off
+					if (speed < 0.001f)
+					{
+						yield return null;
+						continue;
+					}
+
+					transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
 					yield return null;
 				}
 

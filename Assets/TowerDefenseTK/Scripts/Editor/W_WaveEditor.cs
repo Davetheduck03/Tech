@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using TowerDefenseTK;
@@ -12,12 +13,16 @@ public class W_WaveEditor : EditorWindow
         window.Show();
     }
 
-    private MapData currentMap;
-    private Vector2 scrollPos;
-    private int selectedSpawner = 0;
+    private List<MapData> maps         = new List<MapData>();
+    private int           selectedMap  = 0;
+    private MapData       currentMap   => maps.Count > 0 && selectedMap < maps.Count ? maps[selectedMap] : null;
+    private Vector2       scrollPos;
+    private int           selectedSpawner = 0;
 
     // Per-wave foldout state [spawnerIndex][waveIndex]
     private bool[][] waveFoldouts = new bool[0][];
+
+    private void OnEnable() => RefreshMaps();
 
     private void OnGUI()
     {
@@ -30,7 +35,7 @@ public class W_WaveEditor : EditorWindow
 
         if (currentMap == null)
         {
-            EditorGUILayout.HelpBox("Select a Map Data asset to begin editing waves.", MessageType.Info);
+            EditorGUILayout.HelpBox("No MapData assets found in the project.\n\nCreate one via the Grid Map Editor.", MessageType.Info);
             return;
         }
 
@@ -65,18 +70,48 @@ public class W_WaveEditor : EditorWindow
     private void DrawMapSelector()
     {
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("Map Data:", GUILayout.Width(70));
+        EditorGUILayout.LabelField($"Maps ({maps.Count})", EditorStyles.boldLabel, GUILayout.Width(80));
 
-        MapData newMap = (MapData)EditorGUILayout.ObjectField(currentMap, typeof(MapData), false);
-        if (newMap != currentMap)
+        if (GUILayout.Button("Refresh", GUILayout.Width(65), GUILayout.Height(18)))
         {
-            currentMap = newMap;
-            selectedSpawner = 0;
-            waveFoldouts = new bool[0][];
-            Repaint();
+            RefreshMaps();
+            return;
         }
 
         EditorGUILayout.EndHorizontal();
+
+        if (maps.Count == 0) return;
+
+        // One tab per discovered MapData asset
+        string[] mapNames = new string[maps.Count];
+        for (int i = 0; i < maps.Count; i++)
+            mapNames[i] = maps[i] != null ? maps[i].name : "(null)";
+
+        int newSel = GUILayout.Toolbar(selectedMap, mapNames, GUILayout.Height(24));
+        if (newSel != selectedMap)
+        {
+            selectedMap     = newSel;
+            selectedSpawner = 0;
+            waveFoldouts    = new bool[0][];
+            Repaint();
+        }
+    }
+
+    private void RefreshMaps()
+    {
+        maps.Clear();
+        string[] guids = AssetDatabase.FindAssets("t:MapData");
+        foreach (string guid in guids)
+        {
+            MapData m = AssetDatabase.LoadAssetAtPath<MapData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (m != null) maps.Add(m);
+        }
+
+        // Keep selection in bounds after refresh
+        selectedMap = Mathf.Clamp(selectedMap, 0, Mathf.Max(0, maps.Count - 1));
+        selectedSpawner = 0;
+        waveFoldouts    = new bool[0][];
+        Repaint();
     }
 
     // ─── Spawner Tabs ─────────────────────────────────────────────────────────
