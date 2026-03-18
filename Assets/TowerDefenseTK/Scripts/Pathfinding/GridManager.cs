@@ -1,137 +1,182 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    public static GridManager Instance;
+	public static GridManager Instance;
 
-    [Header("Grid Settings")]
-    public int width = 10;
-    public int height = 10;
-    public float cellSize = 1f;
+	[Header("Grid Settings")]
+	public int width = 10;
+	public int height = 10;
+	public float cellSize = 1f;
 
-    [Header("Debug Settings")]
-    public bool drawGridInGame = true;
-    public Material lineMaterial;
+	[Header("Grid Line Settings")]
+	public bool drawGridInGame = true;
+	public Color lineColor = new Color(1f, 1f, 1f, 0.4f);
+	[Tooltip("Raise this if lines clip into your ground plane.")]
+	public float lineHeightOffset = 0.05f;
 
-    private Dictionary<Vector2Int, GridNode> grid = new Dictionary<Vector2Int, GridNode>();
-    private List<LineRenderer> gridLines = new List<LineRenderer>();
+	private Dictionary<Vector2Int, GridNode> grid = new Dictionary<Vector2Int, GridNode>();
 
-    private Vector3 Origin => transform.position;
+	// GL drawing needs a plain unlit material — created once, never destroyed
+	private Material glMaterial;
 
-    private void Awake()
-    {
-        Instance = this;
-        GenerateGrid();
-        if (drawGridInGame)
-            DrawGridLines();
-    }
+	private Vector3 Origin => transform.position;
 
-    public Dictionary<Vector2Int, GridNode> GetAllNodes() => grid;
+	// ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    void GenerateGrid()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Vector2Int coords = new Vector2Int(x, y);
-                Vector3 world = GridToWorld(coords);
+	private void Awake()
+	{
+		Instance = this;
+		GenerateGrid();
+		CreateGLMaterial();
+	}
 
-                grid[coords] = new GridNode(coords, world);
-            }
-        }
-    }
+	private void CreateGLMaterial()
+	{
+		// Standard hidden shader that works in every render pipeline
+		Shader shader = Shader.Find("Hidden/Internal-Colored");
+		if (shader == null)
+		{
+			// Fallback — exists in all Unity versions
+			shader = Shader.Find("Sprites/Default");
+		}
 
-    public Vector3 GridToWorld(Vector2Int coords)
-    {
-        return Origin + new Vector3(coords.x * cellSize, 0f, coords.y * cellSize);
-    }
+		glMaterial = new Material(shader);
+		glMaterial.hideFlags = HideFlags.HideAndDontSave;
+		// Turn off depth write so lines draw on top of the ground
+		glMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+		glMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+		glMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+		glMaterial.SetInt("_ZWrite", 0);
+	}
 
-    public bool TryGetNode(Vector2Int coords, out GridNode node) => grid.TryGetValue(coords, out node);
+	// OnPostRender is called by the camera after it finishes rendering.
+	// This must be on a script attached to the camera, OR we use Camera.onPostRender.
+	// We register via the callback so this script can live on any GameObject.
+	private void OnEnable()
+	{
+		Camera.onPostRender += DrawGL;
+	}
 
-    public Vector2Int WorldToGrid(Vector3 world)
-    {
-        Vector3 local = world - Origin;
-        int x = Mathf.FloorToInt(local.x / cellSize);
-        int y = Mathf.FloorToInt(local.z / cellSize);
-        return new Vector2Int(x, y);
-    }
+	private void OnDisable()
+	{
+		Camera.onPostRender -= DrawGL;
+	}
 
-    public bool IsCellOccupied(Vector2Int coords) => grid.ContainsKey(coords) && grid[coords].occupied;
+	private void OnDestroy()
+	{
+		if (glMaterial != null)
+			DestroyImmediate(glMaterial);
+	}
 
-    public void SetCellOccupied(Vector2Int coords, bool value)
-    {
-        if (grid.ContainsKey(coords))
-            grid[coords].occupied = value;
-    }
+	// ── GL Drawing ────────────────────────────────────────────────────────────
 
-    private void DrawGridLines()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Vector3 bottomLeft = GridToWorld(new Vector2Int(x, y));
-                Vector3 bottomRight = bottomLeft + new Vector3(cellSize, 0, 0);
-                Vector3 topRight = bottomLeft + new Vector3(cellSize, 0, cellSize);
-                Vector3 topLeft = bottomLeft + new Vector3(0, 0, cellSize);
+	private void DrawGL(Camera cam)
+	{
+		if (!drawGridInGame) return;
+		if (glMaterial == null) return;
+		if (!Application.isPlaying) return;
 
-                DrawLine(bottomLeft, bottomRight);
-                DrawLine(bottomRight, topRight);
-                DrawLine(topRight, topLeft);
-                DrawLine(topLeft, bottomLeft);
-            }
-        }
-    }
+		// Only draw for the main camera (skip reflection probes, shadow maps etc.)
+		if (cam != Camera.main) return;
 
-    private void DrawLine(Vector3 start, Vector3 end)
-    {
-        GameObject lineObj = new GameObject("GridLine");
-        lineObj.transform.parent = transform;
+		glMaterial.SetPass(0);
 
-        LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+		GL.PushMatrix();
+		GL.MultMatrix(Matrix4x4.identity); // world space
 
-        if (lineMaterial != null)
-        {
-            lr.material = lineMaterial;
-        }
-        else
-        {
-            lr.material = new Material(Shader.Find("Unlit/Color"));
-            lr.material.color = Color.white;
-        }
+		GL.Begin(GL.LINES);
+		GL.Color(lineColor);
 
-        lr.startColor = Color.white;
-        lr.endColor = Color.white;
-        lr.widthMultiplier = 0.05f;
-        lr.positionCount = 2;
-        lr.SetPosition(0, start + Vector3.up * 0.1f);
-        lr.SetPosition(1, end + Vector3.up * 0.1f);
-        lr.useWorldSpace = true;
-        lr.loop = false;
+		float totalW = width * cellSize;
+		float totalH = height * cellSize;
+		float y = Origin.y + lineHeightOffset;
 
-        gridLines.Add(lr);
-    }
+		// Vertical lines (run along Z axis)
+		for (int x = 0; x <= width; x++)
+		{
+			float xPos = Origin.x + x * cellSize;
+			GL.Vertex3(xPos, y, Origin.z);
+			GL.Vertex3(xPos, y, Origin.z + totalH);
+		}
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.green;
+		// Horizontal lines (run along X axis)
+		for (int z = 0; z <= height; z++)
+		{
+			float zPos = Origin.z + z * cellSize;
+			GL.Vertex3(Origin.x, y, zPos);
+			GL.Vertex3(Origin.x + totalW, y, zPos);
+		}
 
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Vector3 bottomLeft = Origin + new Vector3(x * cellSize, 0.01f, y * cellSize);
-                Vector3 bottomRight = bottomLeft + new Vector3(cellSize, 0, 0);
-                Vector3 topRight = bottomLeft + new Vector3(cellSize, 0, cellSize);
-                Vector3 topLeft = bottomLeft + new Vector3(0, 0, cellSize);
+		GL.End();
+		GL.PopMatrix();
+	}
 
-                Gizmos.DrawLine(bottomLeft, bottomRight);
-                Gizmos.DrawLine(bottomRight, topRight);
-                Gizmos.DrawLine(topRight, topLeft);
-                Gizmos.DrawLine(topLeft, bottomLeft);
-            }
-        }
-    }
+	// ── Grid Data ─────────────────────────────────────────────────────────────
+
+	public Dictionary<Vector2Int, GridNode> GetAllNodes() => grid;
+
+	private void GenerateGrid()
+	{
+		grid.Clear();
+
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				Vector2Int coords = new Vector2Int(x, y);
+				grid[coords] = new GridNode(coords, GridToWorld(coords));
+			}
+		}
+	}
+
+	public Vector3 GridToWorld(Vector2Int coords)
+	{
+		return Origin + new Vector3(coords.x * cellSize, 0f, coords.y * cellSize);
+	}
+
+	public bool TryGetNode(Vector2Int coords, out GridNode node) =>
+		grid.TryGetValue(coords, out node);
+
+	public Vector2Int WorldToGrid(Vector3 world)
+	{
+		Vector3 local = world - Origin;
+		return new Vector2Int(
+			Mathf.FloorToInt(local.x / cellSize),
+			Mathf.FloorToInt(local.z / cellSize)
+		);
+	}
+
+	public bool IsCellOccupied(Vector2Int coords) =>
+		grid.ContainsKey(coords) && grid[coords].occupied;
+
+	public void SetCellOccupied(Vector2Int coords, bool value)
+	{
+		if (grid.ContainsKey(coords))
+			grid[coords].occupied = value;
+	}
+
+	// ── Scene-view Gizmos ─────────────────────────────────────────────────────
+
+	private void OnDrawGizmos()
+	{
+		Gizmos.color = new Color(0f, 1f, 0f, 0.25f);
+
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				Vector3 bl = Origin + new Vector3(x * cellSize, 0.01f, y * cellSize);
+				Vector3 br = bl + new Vector3(cellSize, 0f, 0f);
+				Vector3 tr = bl + new Vector3(cellSize, 0f, cellSize);
+				Vector3 tl = bl + new Vector3(0f, 0f, cellSize);
+
+				Gizmos.DrawLine(bl, br);
+				Gizmos.DrawLine(br, tr);
+				Gizmos.DrawLine(tr, tl);
+				Gizmos.DrawLine(tl, bl);
+			}
+		}
+	}
 }
