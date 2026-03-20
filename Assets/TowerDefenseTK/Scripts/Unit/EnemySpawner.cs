@@ -42,6 +42,16 @@ namespace TowerDefenseTK
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
 
+        // ── Events ───────────────────────────────────────────────────────────
+        /// <summary>Fired when a new wave begins spawning. Arg: 1-based wave number.</summary>
+        public static event System.Action<int> OnWaveStarted;
+
+        /// <summary>
+        /// Fired when all enemies in a wave have been spawned and the cooldown begins.
+        /// Args: wave number that just finished, cooldown duration in seconds.
+        /// </summary>
+        public static event System.Action<int, float> OnWaveCooldownStarted;
+
         // Runtime state
         private Transform targetEndNode;
         private PathNode startPathNode;
@@ -248,10 +258,14 @@ namespace TowerDefenseTK
                 if (showDebugLogs)
                     Debug.Log($"=== Wave {currentWave} starting: {config.enemyCount}x '{config.enemyPoolName}' ===");
 
+                OnWaveStarted?.Invoke(currentWave);
+
                 yield return StartCoroutine(SpawnWaveEnemies(config));
 
                 if (showDebugLogs)
                     Debug.Log($"=== Wave {currentWave} finished. Next wave in {config.cooldownAfter}s ===");
+
+                OnWaveCooldownStarted?.Invoke(currentWave, config.cooldownAfter);
 
                 yield return new WaitForSeconds(config.cooldownAfter);
 
