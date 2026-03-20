@@ -27,9 +27,10 @@ MonoBehaviour:
   range: 7
   towerType: 0
   towerTargetType: 3
-  targetGroup: 0
+  targetGroup: 2
   AOEType: 0
   projectileSpeed: 50
   AOE_Radius: 0
   buildCost: 0
   previewPrefab: {fileID: 6811615284067369269, guid: cde726cd2c217774db4dff2ddc5b7a4a, type: 3}
+  statusEffect: {fileID: 0}

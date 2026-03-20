@@ -9,6 +9,10 @@ public class BaseEnemy : BaseUnit, IPoolable
     [HideInInspector] public int totalPathNodes;
     [HideInInspector] public bool isFlying;
 
+    [Header("Parts")]
+    [SerializeField] private EnemyBody e_Body;
+    [SerializeField] private EnemyWeapon e_Weapon;
+
     /// <summary>
     /// Get the EnemySO data for this enemy
     /// </summary>
@@ -16,6 +20,17 @@ public class BaseEnemy : BaseUnit, IPoolable
     {
         // Access unitData directly - we inherit from BaseUnit so we have access
         return unitData as EnemySO;
+    }
+
+    protected override void Awake()
+    {
+        base.Awake();
+        EnemySO data = GetEnemyData();
+        if (data != null)
+            isFlying = data.isFlying;
+
+        // Initialise the weapon child if one is assigned
+        e_Weapon?.Init(this);
     }
 
     public void OnSpawned()

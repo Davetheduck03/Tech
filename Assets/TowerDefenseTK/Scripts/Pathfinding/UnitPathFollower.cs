@@ -15,6 +15,14 @@ namespace TowerDefenseTK
 		[Tooltip("Search radius for finding a nearby walkable node when rejoining after a reroute")]
 		[SerializeField] private float rejoinSearchRadius = 5f;
 
+		[Header("Rotation")]
+		[Tooltip("How fast the enemy turns to face its movement direction.")]
+		[SerializeField] private float rotationSpeed = 10f;
+		[Tooltip("Smoothly interpolate rotation. Uncheck for instant snapping.")]
+		[SerializeField] private bool smoothRotation = true;
+		[Tooltip("Extra Y rotation applied to the facing direction. Set to 180 if your model faces backwards.")]
+		[SerializeField] private float facingOffset = 0f;
+
 		private List<PathNode> path;
 		private int currentIndex = 0;
 		private Coroutine followRoutine;
@@ -231,7 +239,20 @@ namespace TowerDefenseTK
 						continue;
 					}
 
+					Vector3 moveDir = (targetPos - transform.position);
+					moveDir.y = 0f;
+
 					transform.position = Vector3.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
+
+					// Rotate to face movement direction
+					if (moveDir.sqrMagnitude > 0.001f)
+					{
+						Quaternion targetRot = Quaternion.LookRotation(moveDir) * Quaternion.Euler(0f, facingOffset, 0f);
+						transform.rotation = smoothRotation
+							? Quaternion.Slerp(transform.rotation, targetRot, rotationSpeed * Time.deltaTime)
+							: targetRot;
+					}
+
 					yield return null;
 				}
 
