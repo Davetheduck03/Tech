@@ -41,7 +41,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3698647033451243543}
-  m_Mesh: {fileID: 2560939991694329063, guid: d056b543ff1b6954585f72a631726c07, type: 3}
+  m_Mesh: {fileID: 1834655360584101406, guid: a9a6898c3cbff5b4a8aee18a8b85e180, type: 3}
 --- !u!23 &2283026644894221589
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 6842584044724275946, guid: d056b543ff1b6954585f72a631726c07, type: 3}
+  - {fileID: -8469494145858465668, guid: f2697f42e9e2d91499c7fe85e3897da2, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -141,7 +141,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4888151792330151402}
-  m_Mesh: {fileID: 7362141876373255658, guid: a7a3487fc86057c43ad68ed8476705d8, type: 3}
+  m_Mesh: {fileID: -5682537913408779447, guid: 3c4d44c9ae278ab45b106045dea2e639, type: 3}
 --- !u!23 &694900562168435471
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -165,7 +165,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 6842584044724275946, guid: a7a3487fc86057c43ad68ed8476705d8, type: 3}
+  - {fileID: -8469494145858465668, guid: f2697f42e9e2d91499c7fe85e3897da2, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -205,6 +205,12 @@ MonoBehaviour:
   recoilRecoverySpeed: 10
   shootingPoint: {fileID: 0}
   damageComponent: {fileID: 0}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  towerLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &6811615284067369269
 GameObject:
   m_ObjectHideFlags: 0
@@ -255,7 +261,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5de44616f40188546ba0a5f10dcc5906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unitData: {fileID: 11400000, guid: 07b75a1332ac31d47a7773c5a04b0a27, type: 2}
+  unitData: {fileID: 11400000, guid: e7533d597fdf40b18d011ea811e1213c, type: 2}
   t_Weapon: {fileID: 1871703259406638194}
   t_Base: {fileID: 7861700384267359383}
   healthComponent: {fileID: 0}

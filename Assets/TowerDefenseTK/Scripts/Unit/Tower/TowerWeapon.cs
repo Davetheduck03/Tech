@@ -27,7 +27,7 @@ namespace TowerDefenseTK
         private Vector3 targetDirection;
         private Quaternion targetRotation;
         public DamageComponent damageComponent;
-  
+
 
         private float lastFireTime;
         private float targetUpdateTimer;
@@ -35,13 +35,22 @@ namespace TowerDefenseTK
         // Support tower aura
         [Header("Support Tower")]
         [SerializeField] private LayerMask enemyLayer;
+        [Tooltip("Layer mask for allied towers. Used by Buff-type support towers.")]
+        [SerializeField] private LayerMask towerLayer;
         private float supportPulseTimer;
+
+        // Cached buff component on this tower (null if tower has none)
+        private TowerBuffComponent buffComponent;
+
+        // Resource (Miner) tower
+        private float resourceTimer;
 
         public void Init(TowerUnit parent)
         {
             parentTower = parent;
             shootingPoint ??= transform;
             originalLocalPosition = transform.localPosition;
+            buffComponent = parent.GetComponent<TowerBuffComponent>();
         }
 
         private void Update()
@@ -56,8 +65,7 @@ namespace TowerDefenseTK
                     SupportTick();
                     break;
                 case TowerType.AoE:
-                    HandleRecoil();
-                    AOETick();
+                    AOETick(); // HandleRecoil is called inside each AOE sub-method
                     break;
                 case TowerType.Resource:
                     ResourceTick();
@@ -65,9 +73,20 @@ namespace TowerDefenseTK
             }
         }
 
+        /// <summary>
+        /// Passively generates gold every second based on goldPerSecond in the TowerSO.
+        /// No targeting or enemies required — just place and profit.
+        /// </summary>
         private void ResourceTick()
         {
-            // TODO: passively generate gold over time
+            resourceTimer += Time.deltaTime;
+            if (resourceTimer < 1f) return;
+
+            resourceTimer -= 1f; // subtract rather than reset so fractional ticks don't drift
+
+            float gps = parentTower.towerSO.goldPerSecond;
+            if (gps > 0f && CurrencyManager.Instance != null)
+                CurrencyManager.Instance.Add(Mathf.RoundToInt(gps));
         }
 
         #region AOE Func
@@ -77,20 +96,22 @@ namespace TowerDefenseTK
             switch (parentTower.towerSO.AOEType)
             {
                 case AOEType.Cone:
-
+                    HandleRecoil();
+                    ConeAOETick();
                     break;
                 case AOEType.Circle:
-
+                    HandleRecoil();
+                    CircleAOETick();
                     break;
                 case AOEType.Turret_AOE:
                     AOETurretTick();
                     break;
             }
-
         }
 
         public void AOETurretTick()
         {
+            HandleRecoil();
             targetUpdateTimer += Time.deltaTime;
             if (targetUpdateTimer >= 0.2f)
             {
@@ -101,7 +122,7 @@ namespace TowerDefenseTK
             RotateToTarget();
 
             if (currentTarget != null &&
-                Time.time - lastFireTime >= 1f / parentTower.towerSO.fireRate)
+                Time.time - lastFireTime >= 1f / GetEffectiveFireRate())
             {
                 ShootProjectile();
                 TriggerRecoil();
@@ -112,23 +133,99 @@ namespace TowerDefenseTK
         private void ShootProjectile()
         {
             if (currentTarget == null) return;
-            GameObject projectileOBJ = PoolManager.Instance.Spawn("Projectile", shootingPoint.position, Quaternion.identity);
+
+            GameObject projectileOBJ = PoolManager.Instance.Spawn(
+                "Projectile", shootingPoint.position, Quaternion.identity);
 
             BaseProjectile projectile = projectileOBJ.GetComponent<BaseProjectile>();
             if (projectile == null) return;
+
+            projectile.Init(
+                parentTower.towerSO.projectileSpeed,
+                parentTower.towerSO.AOE_Radius,
+                parentTower.towerSO.projectileConfig,
+                currentTarget,
+                this);
+        }
+
+        /// <summary>
+        /// Cone AOE — instant damage in a forward-facing arc, fired at the tower's fire rate.
+        ///
+        /// The tower rotates toward its current target so the cone is aimed.
+        /// All enemies inside the cone's radius AND within half the coneAngle of the
+        /// tower's forward direction are hit.
+        ///
+        /// Configure via TowerSO:  range = reach of the cone, coneAngle = opening angle.
+        /// </summary>
+        private void ConeAOETick()
+        {
+            targetUpdateTimer += Time.deltaTime;
+            if (targetUpdateTimer >= 0.2f)
             {
-                projectile.Init(parentTower.towerSO.projectileSpeed, parentTower.towerSO.AOE_Radius, currentTarget, this);
+                targetUpdateTimer = 0f;
+                UpdateTarget();
+            }
+
+            RotateToTarget();
+
+            if (currentTarget == null) return;
+            if (Time.time - lastFireTime < 1f / GetEffectiveFireRate()) return;
+
+            lastFireTime = Time.time;
+            TriggerRecoil();
+
+            float effectiveRange = GetEffectiveRange();
+            float halfAngle      = parentTower.towerSO.coneAngle * 0.5f;
+            Vector3 origin       = parentTower.transform.position;
+            Vector3 forward      = transform.forward; // weapon head faces target
+
+            Collider[] hits = Physics.OverlapSphere(origin, effectiveRange, enemyLayer);
+            foreach (Collider hit in hits)
+            {
+                Vector3 dirToEnemy = (hit.transform.position - origin).normalized;
+                if (Vector3.Angle(forward, dirToEnemy) <= halfAngle)
+                    damageComponent.TryDealDamage(hit.gameObject);
             }
         }
 
-        // Implement Prefab based AOE (Cone, Circle)
+        /// <summary>
+        /// Circle AOE — instant 360° pulse damage around the tower, fired at the tower's fire rate.
+        ///
+        /// No rotation is needed; the tower hits everything within range simultaneously.
+        /// Good for ground-based shockwaves or area mines.
+        ///
+        /// Configure via TowerSO:  range = pulse radius, fireRate = pulses per second.
+        /// </summary>
+        private void CircleAOETick()
+        {
+            if (Time.time - lastFireTime < 1f / GetEffectiveFireRate()) return;
+
+            lastFireTime = Time.time;
+            TriggerRecoil();
+
+            float effectiveRange = GetEffectiveRange();
+            Vector3 origin       = parentTower.transform.position;
+
+            Collider[] hits = Physics.OverlapSphere(origin, effectiveRange, enemyLayer);
+            foreach (Collider hit in hits)
+                damageComponent.TryDealDamage(hit.gameObject);
+        }
 
         #endregion
 
         /// <summary>
-        /// Pulses the tower's StatusEffectSO aura every 0.5 s onto all enemies in range.
-        /// Assign a StatusEffectSO to the tower's SO to enable this (Slow, Stun, DOT all work).
-        /// If no effect is assigned the support tower does nothing — add one via the inspector.
+        /// Pulses every 0.5 s and handles two mutually exclusive support modes:
+        ///
+        /// ENEMY DEBUFF — if statusEffect is set on the TowerSO:
+        ///   Applies the StatusEffectSO (Slow, Stun, DOT) to every enemy in range.
+        ///   Used by the AOE Slow turret and any other debuff support tower.
+        ///
+        /// ALLIED BUFF — if towerBuff is set on the TowerSO:
+        ///   Applies the TowerBuffSO (fire-rate / damage / range boost) to every
+        ///   allied tower in range that has a TowerBuffComponent attached.
+        ///   The buff tower itself is excluded so it doesn't buff itself.
+        ///
+        /// Both fields can technically be set at the same time (hybrid tower).
         /// </summary>
         private void SupportTick()
         {
@@ -138,15 +235,52 @@ namespace TowerDefenseTK
             if (supportPulseTimer < PulseInterval) return;
             supportPulseTimer = 0f;
 
-            StatusEffectSO effect = parentTower.towerSO.statusEffect;
-            if (effect == null) return; // no effect configured — nothing to do
+            float effectiveRange = GetEffectiveRange();
 
-            Collider[] hits = Physics.OverlapSphere(transform.position, parentTower.towerSO.range, enemyLayer);
-            foreach (var hit in hits)
+            // ── Enemy debuff aura ─────────────────────────────────────────────
+            StatusEffectSO effect = parentTower.towerSO.statusEffect;
+            if (effect != null)
             {
-                hit.GetComponent<StatusEffectComponent>()?.Apply(effect);
+                Collider[] enemyHits = Physics.OverlapSphere(
+                    parentTower.transform.position, effectiveRange, enemyLayer);
+
+                foreach (var hit in enemyHits)
+                    hit.GetComponent<StatusEffectComponent>()?.Apply(effect);
+            }
+
+            // ── Allied tower buff aura ────────────────────────────────────────
+            TowerBuffSO buff = parentTower.towerSO.towerBuff;
+            if (buff != null)
+            {
+                Collider[] towerHits = Physics.OverlapSphere(
+                    parentTower.transform.position, effectiveRange, towerLayer);
+
+                foreach (var hit in towerHits)
+                {
+                    // Don't buff the buff tower itself
+                    if (hit.gameObject == parentTower.gameObject) continue;
+
+                    hit.GetComponent<TowerBuffComponent>()?.ApplyBuff(buff);
+                }
             }
         }
+
+        #region Buff Helpers
+
+        /// <summary>
+        /// Effective range factoring in any active TowerBuffComponent multiplier.
+        /// Falls back to the base SO value when no buff is present.
+        /// </summary>
+        private float GetEffectiveRange() =>
+            parentTower.towerSO.range * (buffComponent != null ? buffComponent.RangeMultiplier : 1f);
+
+        /// <summary>
+        /// Effective fire rate factoring in any active TowerBuffComponent multiplier.
+        /// </summary>
+        private float GetEffectiveFireRate() =>
+            parentTower.towerSO.fireRate * (buffComponent != null ? buffComponent.FireRateMultiplier : 1f);
+
+        #endregion
 
         #region Recoil
 
@@ -169,16 +303,18 @@ namespace TowerDefenseTK
 
         private void UpdateTarget()
         {
+            float effectiveRange = GetEffectiveRange();
+
             var newTarget = EnemyManager.Instance.GetTarget(
                 transform.position,
-                parentTower.towerSO.range,
+                effectiveRange,
                 parentTower.towerSO.towerTargetType,
                 parentTower.towerSO.targetGroup
             );
 
             if (currentTarget != null &&
                 currentTarget.gameObject.activeInHierarchy &&
-                Vector3.Distance(currentTarget.transform.position, transform.position) <= parentTower.towerSO.range)
+                Vector3.Distance(currentTarget.transform.position, transform.position) <= effectiveRange)
             {
                 return;
             }
@@ -210,7 +346,7 @@ namespace TowerDefenseTK
             RotateToTarget();
 
             if (currentTarget != null &&
-                Time.time - lastFireTime >= 1f / parentTower.towerSO.fireRate)
+                Time.time - lastFireTime >= 1f / GetEffectiveFireRate())
             {
                 ShootInstant();
                 lastFireTime = Time.time;
@@ -259,10 +395,13 @@ namespace TowerDefenseTK
 
         private void OnDrawGizmosSelected()
         {
-            if (parentTower.towerSO == null) return;
+            if (parentTower == null || parentTower.towerSO == null) return;
 
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, parentTower.towerSO.range);
+            float gizmoRange = GetEffectiveRange();
+
+            // Yellow = range sphere; green tint when buffed
+            Gizmos.color = (buffComponent != null && buffComponent.IsBuffed) ? Color.green : Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, gizmoRange);
 
             if (currentTarget != null)
             {
@@ -271,14 +410,14 @@ namespace TowerDefenseTK
             }
 
             Gizmos.color = Color.cyan;
-            Gizmos.DrawRay(transform.position, targetDirection * parentTower.towerSO.range);
+            Gizmos.DrawRay(transform.position, targetDirection * gizmoRange);
         }
 
         private void OnDrawGizmos()
         {
-            if(parentTower == null)
+            if (parentTower == null)
                 parentTower = GetComponentInParent<TowerUnit>();
-            if (parentTower.towerSO != null)
+            if (parentTower != null && parentTower.towerSO != null)
             {
                 Gizmos.color = Color.yellow * 0.3f;
                 Gizmos.DrawWireSphere(transform.position, parentTower.towerSO.range);

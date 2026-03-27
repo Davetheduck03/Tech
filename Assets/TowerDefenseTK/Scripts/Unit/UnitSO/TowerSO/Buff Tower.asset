@@ -10,33 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2f31d933f888144bb93d063484eaf12, type: 3}
-  m_Name: Turret II Tower
+  m_Name: Buff Tower
   m_EditorClassIdentifier: 
-  UnitName: Turret Tower
-  UnitPrefab: {fileID: 6811615284067369269, guid: 63475bab96584c445b45015c3d7f3aea, type: 3}
-  Icon: {fileID: -8036940194713687359, guid: b536276db7ad9114c937658a18d35509, type: 3}
-  Health: 75
+  UnitName: Buff Tower
+  UnitPrefab: {fileID: 6811615284067369269, guid: 2e30a07a9a161e94c92621fb9bb9a5a8, type: 3}
+  Icon: {fileID: 8291305821292071062, guid: cd6eb6be9cdaa9349bc8820f8be8148b, type: 3}
+  Health: 60
   Speed: 0
   goldReward: 0
-  damage: 8
+  damage: 0
   damageType: {fileID: 0}
   isTargetable: 0
   defenseTypes: []
   armor: 0
-  fireRate: 2
+  fireRate: 1
   range: 7
-  towerType: 0
-  towerTargetType: 3
-  targetGroup: 2
+  towerType: 2
+  towerTargetType: 0
+  targetGroup: 0
   AOEType: 0
-  projectileSpeed: 50
+  projectileSpeed: 0
   AOE_Radius: 0
-  buildCost: 0
-  previewPrefab: {fileID: 6811615284067369269, guid: cde726cd2c217774db4dff2ddc5b7a4a, type: 3}
+  buildCost: 200
+  previewPrefab: {fileID: 1665302240680684009, guid: 3ddd76fc9ba463744be5120cdb13cc36, type: 3}
   statusEffect: {fileID: 0}
   projectileConfig:
     arcHeight: 0
     useFixedTarget: 0
   coneAngle: 60
-  towerBuff: {fileID: 0}
-  goldPerSecond: 5
+  towerBuff: {fileID: 11400000, guid: fe0b857ad7925834c800205fbe0a2a5a, type: 2}
+  goldPerSecond: 0

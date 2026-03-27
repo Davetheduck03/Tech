@@ -123,6 +123,44 @@ public class TowerDataEditor : EditorWindow
         DrawEnumRow<AOEType>("AOE Type", t => t.AOEType, (t, v) => t.AOEType = v,
             t => t.towerType == TowerType.AoE);
 
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Projectile Settings", EditorStyles.boldLabel);
+        EditorGUILayout.Space(5);
+
+        // Arc Height — only for AoE Turret_AOE towers
+        DrawFloatRow("Arc Height",
+            t => t.projectileConfig.arcHeight,
+            (t, v) => { var c = t.projectileConfig; c.arcHeight = v; t.projectileConfig = c; },
+            t => t.towerType == TowerType.AoE && t.AOEType == AOEType.Turret_AOE);
+
+        // Fixed Target — bool, only for AoE Turret_AOE towers
+        DrawBoolRow("Fixed Target",
+            t => t.projectileConfig.useFixedTarget,
+            (t, v) => { var c = t.projectileConfig; c.useFixedTarget = v; t.projectileConfig = c; },
+            t => t.towerType == TowerType.AoE && t.AOEType == AOEType.Turret_AOE);
+
+        // Cone Angle — only for AoE Cone towers
+        DrawFloatRow("Cone Angle",
+            t => t.coneAngle,
+            (t, v) => t.coneAngle = v,
+            t => t.towerType == TowerType.AoE && t.AOEType == AOEType.Cone);
+
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Specialisation Settings", EditorStyles.boldLabel);
+        EditorGUILayout.Space(5);
+
+        // Gold Per Second — only for Resource towers
+        DrawFloatRow("Gold / Second",
+            t => t.goldPerSecond,
+            (t, v) => t.goldPerSecond = v,
+            t => t.towerType == TowerType.Resource);
+
+        // Tower Buff preset — only for Support towers
+        DrawObjectRow<TowerBuffSO>("Tower Buff",
+            t => t.towerBuff,
+            (t, v) => t.towerBuff = v,
+            t => t.towerType == TowerType.Support);
+
         EditorGUILayout.EndScrollView();
     }
 
@@ -446,5 +484,92 @@ public class TowerDataEditor : EditorWindow
             }
         }
         EditorGUILayout.EndHorizontal();
+    }
+
+    /// <summary>
+    /// Draws a toggle row. showCondition may be null (always show) or a predicate
+    /// — columns where it returns false show a "–" placeholder instead.
+    /// </summary>
+    private void DrawBoolRow(string label,
+                             System.Func<TowerSO, bool> getter,
+                             System.Action<TowerSO, bool> setter,
+                             System.Func<TowerSO, bool> showCondition = null)
+    {
+        bool anyVisible = towers.Any(t => showCondition == null || showCondition(t));
+        if (!anyVisible) return;
+
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label(label, EditorStyles.boldLabel, GUILayout.Width(LabelWidth));
+
+        for (int i = 0; i < towers.Count; i++)
+        {
+            var tower = towers[i];
+            bool canEdit = showCondition == null || showCondition(tower);
+
+            if (!canEdit)
+            {
+                EditorGUILayout.LabelField("–", GUILayout.Width(FieldWidth));
+                continue;
+            }
+
+            bool oldVal = getter(tower);
+            // Toggle fits in a narrow column; centre it with flexible space
+            EditorGUILayout.BeginHorizontal(GUILayout.Width(FieldWidth));
+            GUILayout.FlexibleSpace();
+            bool newVal = EditorGUILayout.Toggle(oldVal, GUILayout.Width(20));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+
+            if (oldVal != newVal)
+            {
+                Undo.RecordObject(tower, $"Edit {label}");
+                setter(tower, newVal);
+                EditorUtility.SetDirty(tower);
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+        GUILayout.Space(3);
+    }
+
+    /// <summary>
+    /// Draws an ObjectField row for UnityEngine.Object references.
+    /// showCondition works the same as the other Draw*Row helpers.
+    /// </summary>
+    private void DrawObjectRow<T>(string label,
+                                  System.Func<TowerSO, T> getter,
+                                  System.Action<TowerSO, T> setter,
+                                  System.Func<TowerSO, bool> showCondition = null)
+                                  where T : UnityEngine.Object
+    {
+        bool anyVisible = towers.Any(t => showCondition == null || showCondition(t));
+        if (!anyVisible) return;
+
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label(label, EditorStyles.boldLabel, GUILayout.Width(LabelWidth));
+
+        for (int i = 0; i < towers.Count; i++)
+        {
+            var tower = towers[i];
+            bool canEdit = showCondition == null || showCondition(tower);
+
+            if (!canEdit)
+            {
+                EditorGUILayout.LabelField("–", GUILayout.Width(FieldWidth));
+                continue;
+            }
+
+            T oldVal = getter(tower);
+            T newVal = (T)EditorGUILayout.ObjectField(
+                oldVal, typeof(T), false, GUILayout.Width(FieldWidth));
+
+            if (oldVal != newVal)
+            {
+                Undo.RecordObject(tower, $"Edit {label}");
+                setter(tower, newVal);
+                EditorUtility.SetDirty(tower);
+            }
+        }
+        EditorGUILayout.EndHorizontal();
+        GUILayout.Space(3);
     }
 }

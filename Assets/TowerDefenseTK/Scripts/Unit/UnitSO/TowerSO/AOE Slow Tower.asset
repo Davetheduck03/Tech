@@ -10,33 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2f31d933f888144bb93d063484eaf12, type: 3}
-  m_Name: AOE Tower
+  m_Name: AOE Slow Tower
   m_EditorClassIdentifier: 
-  UnitName: Canon
-  UnitPrefab: {fileID: 6811615284067369269, guid: f43d7ff1316e6ce418ee97b02c356065, type: 3}
-  Icon: {fileID: 2353418332770667554, guid: c6d091afc847d4b48ba37664106c5244, type: 3}
+  UnitName: AOE Slow
+  UnitPrefab: {fileID: 6811615284067369269, guid: 66bd5f135fb3d504389ab25932dfab2b, type: 3}
+  Icon: {fileID: -5789141688622347452, guid: 14b3b32fd0bfd4f4ca6d7632a24e4ef1, type: 3}
   Health: 80
   Speed: 0
   goldReward: 0
-  damage: 10
+  damage: 5
   damageType: {fileID: 0}
   isTargetable: 0
   defenseTypes: []
   armor: 0
-  fireRate: 1
-  range: 10
+  fireRate: 0.8
+  range: 8
   towerType: 1
   towerTargetType: 0
   targetGroup: 0
-  AOEType: 2
-  projectileSpeed: 50
-  AOE_Radius: 3
-  buildCost: 120
-  previewPrefab: {fileID: 6811615284067369269, guid: 57529aed02e8cdc40b6b06c26bf2a7d3, type: 3}
-  statusEffect: {fileID: 0}
+  AOEType: 1
+  projectileSpeed: 8
+  AOE_Radius: 2.5
+  buildCost: 150
+  previewPrefab: {fileID: 5772024860910070249, guid: 9641a487e808e5b43a5dc0b958351e18, type: 3}
+  statusEffect: {fileID: 11400000, guid: d421e8758e1c39f49a3d3f37f3255e7b, type: 2}
   projectileConfig:
-    arcHeight: 1
-    useFixedTarget: 1
+    arcHeight: 3
+    useFixedTarget: 0
   coneAngle: 60
   towerBuff: {fileID: 0}
-  goldPerSecond: 5
+  goldPerSecond: 0

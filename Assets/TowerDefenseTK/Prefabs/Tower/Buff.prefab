@@ -205,6 +205,12 @@ MonoBehaviour:
   recoilRecoverySpeed: 10
   shootingPoint: {fileID: 0}
   damageComponent: {fileID: 0}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  towerLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &6811615284067369269
 GameObject:
   m_ObjectHideFlags: 0
@@ -255,7 +261,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5de44616f40188546ba0a5f10dcc5906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unitData: {fileID: 11400000, guid: 07b75a1332ac31d47a7773c5a04b0a27, type: 2}
+  unitData: {fileID: 11400000, guid: 304d8a33080845f0932ce9685524079a, type: 2}
   t_Weapon: {fileID: 1871703259406638194}
   t_Base: {fileID: 7861700384267359383}
   healthComponent: {fileID: 0}

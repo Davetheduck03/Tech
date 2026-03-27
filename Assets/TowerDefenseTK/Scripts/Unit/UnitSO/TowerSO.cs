@@ -33,6 +33,43 @@ namespace TowerDefenseTK
         [Tooltip("Effect applied to enemies hit by this tower (turret/AoE: on hit, support: aura pulse).\n" +
                  "Leave empty for no status effect. Create presets via TD Toolkit / Status Effect.")]
         public StatusEffectSO statusEffect;
+
+        [Header("Projectile Config (AoE Turret_AOE type)")]
+        [Tooltip("Controls arc height and targeting mode for projectile-based AoE towers.")]
+        public ProjectileConfig projectileConfig;
+
+        [Header("Cone AOE")]
+        [Range(10f, 180f)]
+        [Tooltip("Full opening angle of the cone in degrees. 60 = 30° each side of the tower's forward.")]
+        public float coneAngle = 60f;
+
+        [Header("Buff Tower (Support type)")]
+        [Tooltip("Buff pulsed to allied towers in range every 0.5 s.\n" +
+                 "Set this on Support towers that boost allies instead of debuffing enemies.\n" +
+                 "Receiving towers must have a TowerBuffComponent attached.\n" +
+                 "Leave empty if this tower debuffs enemies instead.")]
+        public TowerBuffSO towerBuff;
+
+        [Header("Resource Tower")]
+        [Tooltip("Gold generated per second. Used only by Resource-type (Miner) towers.")]
+        public float goldPerSecond = 5f;
+    }
+
+    /// <summary>
+    /// Configures projectile flight behaviour for Turret_AOE towers.
+    /// Exposed in the TowerSO inspector under "Projectile Config".
+    /// </summary>
+    [System.Serializable]
+    public struct ProjectileConfig
+    {
+        [Range(0f, 10f)]
+        [Tooltip("Height of the ballistic arc at the midpoint. 0 = flat straight-line flight.")]
+        public float arcHeight;
+
+        [Tooltip("When enabled the projectile locks on to the target's position at launch time " +
+                 "and flies there even if the target moves or dies. " +
+                 "Recommended with arcHeight > 0 so the arc stays meaningful.")]
+        public bool useFixedTarget;
     }
 
     public enum TowerType

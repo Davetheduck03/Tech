@@ -34,3 +34,9 @@ MonoBehaviour:
   buildCost: 50
   previewPrefab: {fileID: 6811615284067369269, guid: 432043f6a51636b4ba06078eb49a5158, type: 3}
   statusEffect: {fileID: 0}
+  projectileConfig:
+    arcHeight: 0
+    useFixedTarget: 0
+  coneAngle: 60
+  towerBuff: {fileID: 0}
+  goldPerSecond: 5

@@ -12,11 +12,15 @@ public class DamageComponent : UnitComponent
     // On-hit status effect from the tower's SO (null = no effect)
     private StatusEffectSO onHitEffect;
 
+    // Optional buff component on the same tower — scales damage at fire time
+    private TowerBuffComponent buffComponent;
+
     protected override void OnInitialize()
     {
-        damage    = data.damage;
+        damage     = data.damage;
         damageType = data.damageType;
-        killTracker = unit.GetComponent<TowerDamageTracker>();
+        killTracker    = unit.GetComponent<TowerDamageTracker>();
+        buffComponent  = unit.GetComponent<TowerBuffComponent>();
 
         // Only towers have a StatusEffectSO — safe cast, null for enemy units
         if (data is TowerSO towerSO)
@@ -27,8 +31,12 @@ public class DamageComponent : UnitComponent
     {
         if (target.TryGetComponent<HealthComponent>(out HealthComponent health))
         {
+            // Scale damage by any active buff multiplier (1.0 when no buff)
+            float effectiveDamage = damage *
+                (buffComponent != null ? buffComponent.DamageMultiplier : 1f);
+
             // Pass 'this' so HealthComponent can credit the kill back to this tower if it dies
-            health.TakeDamage(damage, damageType, this);
+            health.TakeDamage(effectiveDamage, damageType, this);
         }
 
         // Apply on-hit status effect if the tower has one configured and the target can receive it
