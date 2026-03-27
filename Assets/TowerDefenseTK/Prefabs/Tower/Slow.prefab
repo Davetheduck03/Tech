@@ -220,7 +220,7 @@ GameObject:
   - component: {fileID: 6883724153109677227}
   - component: {fileID: 7049921424377084262}
   m_Layer: 7
-  m_Name: Extractor
+  m_Name: Slow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
