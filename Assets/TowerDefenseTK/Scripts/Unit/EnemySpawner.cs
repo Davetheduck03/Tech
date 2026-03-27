@@ -52,6 +52,19 @@ namespace TowerDefenseTK
         /// </summary>
         public static event System.Action<int, float> OnWaveCooldownStarted;
 
+        /// <summary>
+        /// Fired immediately after the last enemy of a wave has been spawned.
+        /// Arg: 1-based wave number that just completed spawning.
+        /// Note: enemies from this wave may still be alive in the scene.
+        /// </summary>
+        public static event System.Action<int> OnWaveCompleted;
+
+        /// <summary>
+        /// Fired once when all explicitly defined waves have been run for the first time.
+        /// Arg: total number of defined waves. After this, the spawner loops the last wave.
+        /// </summary>
+        public static event System.Action<int> OnAllWavesCleared;
+
         // Runtime state
         private Transform targetEndNode;
         private PathNode startPathNode;
@@ -59,6 +72,7 @@ namespace TowerDefenseTK
         private int currentWave = 1;
         private bool isSpawning = false;
         private bool isInitialized = false;
+        private bool allWavesCleared = false; // tracks whether OnAllWavesCleared has fired
 
         // Public accessors
         public int CurrentWave => currentWave;
@@ -261,6 +275,19 @@ namespace TowerDefenseTK
                 OnWaveStarted?.Invoke(currentWave);
 
                 yield return StartCoroutine(SpawnWaveEnemies(config));
+
+                // All enemies for this wave have been spawned
+                OnWaveCompleted?.Invoke(currentWave);
+
+                // Fire OnAllWavesCleared the first time the last defined wave finishes
+                if (!allWavesCleared && waves != null && currentWave >= waves.Count)
+                {
+                    allWavesCleared = true;
+                    OnAllWavesCleared?.Invoke(waves.Count);
+
+                    if (showDebugLogs)
+                        Debug.Log($"=== All {waves.Count} defined waves cleared! ===");
+                }
 
                 if (showDebugLogs)
                     Debug.Log($"=== Wave {currentWave} finished. Next wave in {config.cooldownAfter}s ===");

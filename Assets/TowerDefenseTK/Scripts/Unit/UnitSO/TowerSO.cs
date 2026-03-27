@@ -53,6 +53,13 @@ namespace TowerDefenseTK
         [Header("Resource Tower")]
         [Tooltip("Gold generated per second. Used only by Resource-type (Miner) towers.")]
         public float goldPerSecond = 5f;
+
+        [Header("Custom Behaviour (Optional)")]
+        [Tooltip("Assign a TowerBehaviourSO subclass to completely replace the built-in\n" +
+                 "Turret / AoE / Support / Resource logic for this tower.\n\n" +
+                 "When set, the TowerType field is ignored — your Tick() method runs instead.\n" +
+                 "Leave empty to use the standard enum-driven behaviour.")]
+        public TowerBehaviourSO customBehaviour;
     }
 
     /// <summary>

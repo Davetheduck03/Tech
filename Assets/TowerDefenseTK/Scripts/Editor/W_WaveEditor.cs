@@ -9,7 +9,7 @@ public class W_WaveEditor : EditorWindow
     public static void ShowWindow()
     {
         var window = GetWindow<W_WaveEditor>("Wave Editor");
-        window.minSize = new Vector2(420, 540);
+        window.minSize = new Vector2(480, 540);
         window.Show();
     }
 
@@ -21,6 +21,13 @@ public class W_WaveEditor : EditorWindow
 
     // Per-wave foldout state [spawnerIndex][waveIndex]
     private bool[][] waveFoldouts = new bool[0][];
+
+    // View mode
+    private enum ViewMode { Waves, Timeline }
+    private ViewMode viewMode = ViewMode.Waves;
+
+    // Timeline selection
+    private int timelineSelectedWave = -1;
 
     private void OnEnable() => RefreshMaps();
 
@@ -49,12 +56,31 @@ public class W_WaveEditor : EditorWindow
         }
 
         DrawSpawnerTabs();
-        EditorGUILayout.Space(10);
+        EditorGUILayout.Space(6);
 
-        DrawWaveList();
-        EditorGUILayout.Space(10);
+        // ── View mode toggle ─────────────────────────────────────────────────
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Toggle(viewMode == ViewMode.Waves,    "Waves",    EditorStyles.miniButtonLeft,  GUILayout.Width(80)))
+            viewMode = ViewMode.Waves;
+        if (GUILayout.Toggle(viewMode == ViewMode.Timeline, "Timeline", EditorStyles.miniButtonRight, GUILayout.Width(80)))
+            viewMode = ViewMode.Timeline;
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.Space(6);
 
-        DrawActions();
+        if (viewMode == ViewMode.Waves)
+        {
+            DrawWaveList();
+            EditorGUILayout.Space(10);
+            DrawActions();
+        }
+        else
+        {
+            DrawTimeline();
+            EditorGUILayout.Space(10);
+            DrawActions();
+        }
     }
 
     // ─── Header ───────────────────────────────────────────────────────────────
@@ -90,9 +116,10 @@ public class W_WaveEditor : EditorWindow
         int newSel = GUILayout.Toolbar(selectedMap, mapNames, GUILayout.Height(24));
         if (newSel != selectedMap)
         {
-            selectedMap     = newSel;
-            selectedSpawner = 0;
-            waveFoldouts    = new bool[0][];
+            selectedMap           = newSel;
+            selectedSpawner       = 0;
+            waveFoldouts          = new bool[0][];
+            timelineSelectedWave  = -1;
             Repaint();
         }
     }
@@ -108,9 +135,10 @@ public class W_WaveEditor : EditorWindow
         }
 
         // Keep selection in bounds after refresh
-        selectedMap = Mathf.Clamp(selectedMap, 0, Mathf.Max(0, maps.Count - 1));
-        selectedSpawner = 0;
-        waveFoldouts    = new bool[0][];
+        selectedMap           = Mathf.Clamp(selectedMap, 0, Mathf.Max(0, maps.Count - 1));
+        selectedSpawner       = 0;
+        waveFoldouts          = new bool[0][];
+        timelineSelectedWave  = -1;
         Repaint();
     }
 
@@ -128,7 +156,12 @@ public class W_WaveEditor : EditorWindow
         }
 
         selectedSpawner = Mathf.Clamp(selectedSpawner, 0, count - 1);
-        selectedSpawner = GUILayout.Toolbar(selectedSpawner, labels, GUILayout.Height(25));
+        int newSpawner  = GUILayout.Toolbar(selectedSpawner, labels, GUILayout.Height(25));
+        if (newSpawner != selectedSpawner)
+        {
+            selectedSpawner      = newSpawner;
+            timelineSelectedWave = -1;
+        }
     }
 
     // ─── Wave List ────────────────────────────────────────────────────────────
@@ -300,6 +333,237 @@ public class W_WaveEditor : EditorWindow
         }
 
         EditorGUILayout.EndVertical();
+    }
+
+    // ─── Timeline ─────────────────────────────────────────────────────────────
+
+    private void DrawTimeline()
+    {
+        SpawnerWaveData data = currentMap.spawnerWaves[selectedSpawner];
+
+        if (data.waves.Count == 0)
+        {
+            EditorGUILayout.HelpBox("No waves to display. Switch to Waves view and add some waves first.", MessageType.Info);
+            return;
+        }
+
+        // ── Pre-compute timing ─────────────────────────────────────────────
+        float[] spawnDurations = new float[data.waves.Count];
+        float[] startTimes     = new float[data.waves.Count];
+
+        float cursor = 0f;
+        for (int i = 0; i < data.waves.Count; i++)
+        {
+            WaveConfig w      = data.waves[i];
+            spawnDurations[i] = w.spawnInterval * Mathf.Max(0, w.enemyCount - 1);
+            startTimes[i]     = cursor;
+            cursor           += spawnDurations[i] + w.cooldownAfter;
+        }
+        float totalSpan = Mathf.Max(cursor, 1f);
+
+        // ── Header ────────────────────────────────────────────────────────
+        EditorGUILayout.LabelField(
+            $"Spawner {selectedSpawner + 1}  —  Timeline  ({totalSpan:0.0}s total)",
+            EditorStyles.boldLabel);
+        EditorGUILayout.LabelField(
+            "Colored = spawn phase   ▪ Grey = cooldown   Click a row to edit",
+            EditorStyles.miniLabel);
+        EditorGUILayout.Space(4);
+
+        // ── Layout constants ──────────────────────────────────────────────
+        const float LabelWidth = 54f;
+        const float RowHeight  = 24f;
+        const float BarPad     = 3f;
+        const float MinBarW    = 3f;
+        const int   TickCount  = 8;
+
+        float windowW   = EditorGUIUtility.currentViewWidth;
+        float availBarW = windowW - LabelWidth - 28f; // 28 = scrollbar + padding
+
+        // ── Scrollable rows ───────────────────────────────────────────────
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+
+        // Time axis
+        {
+            Rect axisRect = GUILayoutUtility.GetRect(windowW, 18f);
+            DrawTimeAxis(axisRect, LabelWidth, availBarW, totalSpan, TickCount);
+        }
+
+        // Separator line
+        {
+            Rect line = GUILayoutUtility.GetRect(windowW, 1f);
+            EditorGUI.DrawRect(line, new Color(0.4f, 0.4f, 0.4f));
+        }
+
+        for (int i = 0; i < data.waves.Count; i++)
+        {
+            WaveConfig w      = data.waves[i];
+            Rect rowRect      = GUILayoutUtility.GetRect(windowW, RowHeight + BarPad * 2f);
+            bool isSelected   = timelineSelectedWave == i;
+
+            // Row background
+            if (isSelected)
+                EditorGUI.DrawRect(rowRect, new Color(0.22f, 0.36f, 0.52f, 0.35f));
+            else if (i % 2 == 0)
+                EditorGUI.DrawRect(rowRect, new Color(0f, 0f, 0f, 0.07f));
+
+            // Wave label
+            Rect labelR = new Rect(rowRect.x + 2f, rowRect.y + BarPad, LabelWidth - 4f, RowHeight);
+            GUIStyle labelStyle = isSelected ? EditorStyles.boldLabel : EditorStyles.miniLabel;
+            GUI.Label(labelR, $"W{i + 1}", labelStyle);
+
+            // Bar area origin
+            float bx = rowRect.x + LabelWidth;
+            float by = rowRect.y + BarPad;
+            float bh = RowHeight;
+
+            // Spawn bar
+            float spawnX = bx + (startTimes[i] / totalSpan) * availBarW;
+            float spawnW = Mathf.Max(MinBarW, (spawnDurations[i] / totalSpan) * availBarW);
+
+            Color poolCol = GetPoolColor(w.enemyPoolName);
+            EditorGUI.DrawRect(new Rect(spawnX, by, spawnW, bh), poolCol);
+
+            // Label inside spawn bar
+            if (spawnW > 50f)
+            {
+                string barLabel = $"{w.enemyPoolName}  ×{w.enemyCount}";
+                GUI.Label(new Rect(spawnX + 3f, by + 1f, spawnW - 6f, bh - 2f),
+                    barLabel, EditorStyles.whiteMiniLabel);
+            }
+
+            // Cooldown bar (thinner, centred vertically)
+            float coolX = spawnX + spawnW;
+            float coolW = (w.cooldownAfter / totalSpan) * availBarW;
+            if (coolW > 1f)
+            {
+                float ch = bh * 0.35f;
+                EditorGUI.DrawRect(
+                    new Rect(coolX, by + (bh - ch) * 0.5f, coolW, ch),
+                    new Color(0.38f, 0.38f, 0.38f, 0.75f));
+            }
+
+            // Row click → select wave
+            if (Event.current.type == EventType.MouseDown &&
+                rowRect.Contains(Event.current.mousePosition))
+            {
+                timelineSelectedWave = (timelineSelectedWave == i) ? -1 : i;
+
+                // Also unfold the wave in list view so switching modes shows it open
+                if (timelineSelectedWave == i && waveFoldouts.Length > selectedSpawner)
+                {
+                    bool[] fo = waveFoldouts[selectedSpawner];
+                    if (fo != null && i < fo.Length) fo[i] = true;
+                }
+
+                Event.current.Use();
+                Repaint();
+            }
+        }
+
+        // Bottom separator
+        {
+            Rect line = GUILayoutUtility.GetRect(windowW, 1f);
+            EditorGUI.DrawRect(line, new Color(0.4f, 0.4f, 0.4f));
+        }
+
+        EditorGUILayout.EndScrollView();
+
+        // ── Selected wave detail ───────────────────────────────────────────
+        if (timelineSelectedWave >= 0 && timelineSelectedWave < data.waves.Count)
+        {
+            int     sel  = timelineSelectedWave;
+            WaveConfig w = data.waves[sel];
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.BeginVertical("box");
+
+            // Header row with color swatch
+            EditorGUILayout.BeginHorizontal();
+            Color swatch = GetPoolColor(w.enemyPoolName);
+            EditorGUI.DrawRect(GUILayoutUtility.GetRect(10f, 16f, GUILayout.Width(10f)), swatch);
+            EditorGUILayout.LabelField($"Wave {sel + 1}  —  {w.waveName}", EditorStyles.boldLabel);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(2);
+            EditorGUI.BeginChangeCheck();
+            EditorGUI.indentLevel++;
+
+            string newName  = EditorGUILayout.TextField  ("Name",               w.waveName);
+            string newPool  = EditorGUILayout.TextField  ("Enemy Pool",         w.enemyPoolName);
+            int    newCount = EditorGUILayout.IntField   ("Enemy Count",        w.enemyCount);
+            float  newInt   = EditorGUILayout.FloatField ("Spawn Interval (s)", w.spawnInterval);
+            float  newCool  = EditorGUILayout.FloatField ("Cooldown After (s)", w.cooldownAfter);
+
+            EditorGUI.indentLevel--;
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(currentMap, "Edit Wave (Timeline)");
+                w.waveName      = newName;
+                w.enemyPoolName = newPool;
+                w.enemyCount    = Mathf.Max(1, newCount);
+                w.spawnInterval = Mathf.Max(0f, newInt);
+                w.cooldownAfter = Mathf.Max(0f, newCool);
+                EditorUtility.SetDirty(currentMap);
+            }
+
+            float dur = spawnDurations[sel];
+            EditorGUILayout.LabelField(
+                $"Start: {startTimes[sel]:0.0}s   Spawn duration: {dur:0.0}s   " +
+                $"Cooldown: {w.cooldownAfter:0.0}s   Total slot: {dur + w.cooldownAfter:0.0}s",
+                EditorStyles.miniLabel);
+
+            EditorGUILayout.EndVertical();
+        }
+    }
+
+    /// <summary>
+    /// Draws a time axis with evenly spaced tick marks and second labels.
+    /// </summary>
+    private static void DrawTimeAxis(Rect rect, float labelWidth, float availW,
+                                     float totalSpan, int tickCount)
+    {
+        float xOrigin = rect.x + labelWidth;
+
+        // Baseline
+        EditorGUI.DrawRect(new Rect(xOrigin, rect.yMax - 1f, availW, 1f),
+            new Color(0.55f, 0.55f, 0.55f));
+
+        for (int t = 0; t <= tickCount; t++)
+        {
+            float frac    = (float)t / tickCount;
+            float timeSec = frac * totalSpan;
+            float x       = xOrigin + frac * availW;
+
+            // Tick
+            EditorGUI.DrawRect(new Rect(x - 0.5f, rect.yMax - 5f, 1f, 5f),
+                new Color(0.55f, 0.55f, 0.55f));
+
+            // Label
+            string lbl = timeSec >= 60f
+                ? $"{timeSec / 60f:0.0}m"
+                : $"{timeSec:0}s";
+
+            GUI.Label(new Rect(x - 14f, rect.y, 30f, rect.height - 6f),
+                lbl, EditorStyles.centeredGreyMiniLabel);
+        }
+    }
+
+    /// <summary>
+    /// Returns a deterministic, visually distinct colour for a pool name.
+    /// The same string always yields the same hue.
+    /// </summary>
+    private static Color GetPoolColor(string poolName)
+    {
+        if (string.IsNullOrEmpty(poolName)) return new Color(0.5f, 0.5f, 0.5f);
+
+        int hash = 17;
+        foreach (char c in poolName)
+            hash = hash * 31 + c;
+
+        float hue = (Mathf.Abs(hash) % 1000) / 1000f;
+        return Color.HSVToRGB(hue, 0.62f, 0.80f);
     }
 
     // ─── Actions ──────────────────────────────────────────────────────────────

@@ -45,16 +45,45 @@ namespace TowerDefenseTK
         // Resource (Miner) tower
         private float resourceTimer;
 
+        // Custom behaviour context (created lazily when customBehaviour is assigned)
+        private TowerBehaviourContext customCtx;
+
         public void Init(TowerUnit parent)
         {
             parentTower = parent;
             shootingPoint ??= transform;
             originalLocalPosition = transform.localPosition;
             buffComponent = parent.GetComponent<TowerBuffComponent>();
+
+            // Build the context if a custom behaviour is assigned on this tower
+            if (parent.towerSO.customBehaviour != null)
+            {
+                customCtx = new TowerBehaviourContext
+                {
+                    Tower           = parent,
+                    Weapon          = this,
+                    DamageComponent = GetComponent<DamageComponent>() ?? parent.GetComponentInChildren<DamageComponent>(),
+                    ShootingPoint   = shootingPoint,
+                    EnemyLayer      = enemyLayer,
+                    EffectiveRange  = parent.towerSO.range,
+                    EffectiveFireRate = parent.towerSO.fireRate,
+                };
+                parent.towerSO.customBehaviour.OnInit(customCtx);
+            }
         }
 
         private void Update()
         {
+            // Custom behaviour overrides the built-in enum dispatch entirely
+            if (parentTower.towerSO.customBehaviour != null && customCtx != null)
+            {
+                // Refresh effective stats each frame so buff changes are reflected
+                customCtx.EffectiveRange     = GetEffectiveRange();
+                customCtx.EffectiveFireRate  = GetEffectiveFireRate();
+                parentTower.towerSO.customBehaviour.Tick(customCtx);
+                return;
+            }
+
             switch (parentTower.towerSO.towerType)
             {
                 case TowerType.Turret:

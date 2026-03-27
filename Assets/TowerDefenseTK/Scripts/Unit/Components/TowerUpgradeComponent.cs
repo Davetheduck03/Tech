@@ -8,6 +8,20 @@ using TowerDefenseTK;
 /// </summary>
 public class TowerUpgradeComponent : UnitComponent
 {
+    // ── Events ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Fired when a tower is upgraded. Args: old TowerSO, new TowerSO, world position.
+    /// </summary>
+    public static event System.Action<TowerSO, TowerSO, Vector3> OnTowerUpgraded;
+
+    /// <summary>
+    /// Fired when a tower is sold via SellTower(). Args: TowerSO, world position, gold refunded.
+    /// </summary>
+    public static event System.Action<TowerSO, Vector3, int> OnTowerSold;
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     [Header("Upgrade Settings")]
     public TowerUpgradeData upgradeData;
     
@@ -114,10 +128,13 @@ public class TowerUpgradeComponent : UnitComponent
         
         // Play upgrade effects (optional)
         PlayUpgradeEffect();
-        
+
+        // Notify toolkit subscribers before destroying
+        OnTowerUpgraded?.Invoke(towerData, upgradeOption.upgradedTower, position);
+
         // Destroy the old tower
         Destroy(gameObject);
-        
+
         Debug.Log($"Tower upgraded to {upgradeOption.upgradedTower.UnitName}!");
         return true;
     }
@@ -146,8 +163,12 @@ public class TowerUpgradeComponent : UnitComponent
         
         // Play sell effect (optional)
         PlaySellEffect();
-        
+
         Debug.Log($"Tower sold for {sellValue} gold!");
+
+        // Notify toolkit subscribers before destroying
+        OnTowerSold?.Invoke(towerData, transform.position, sellValue);
+
         Destroy(gameObject);
         return true;
     }

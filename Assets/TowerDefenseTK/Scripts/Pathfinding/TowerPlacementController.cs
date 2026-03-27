@@ -50,9 +50,16 @@ namespace TowerDefenseTK
 		private GridManager gridManager;
 		private List<Renderer> previewRenderers = new List<Renderer>();
 
-		// Events
-		public event System.Action<TowerSO> OnTowerPlaced;
-		public event System.Action OnPlacementCancelled;
+		// ── Events ────────────────────────────────────────────────────────────
+		/// <summary>Fired after a tower is successfully placed. Args: TowerSO, world position.</summary>
+		public static event System.Action<TowerSO, Vector3> OnTowerPlaced;
+
+		/// <summary>Fired after a tower is removed/sold via RemoveTower(). Args: TowerSO, world position, refund amount.</summary>
+		public static event System.Action<TowerSO, Vector3, int> OnTowerSold;
+
+		/// <summary>Fired when the player cancels placement mode without placing.</summary>
+		public static event System.Action OnPlacementCancelled;
+		// ─────────────────────────────────────────────────────────────────────
 
 		#region Unity Lifecycle
 
@@ -498,7 +505,7 @@ namespace TowerDefenseTK
 			Debug.Log($"TowerPlacementController: Placed '{selectedTower.UnitName}' at {gridPos}");
 
 			// Fire event
-			OnTowerPlaced?.Invoke(selectedTower);
+			OnTowerPlaced?.Invoke(selectedTower, worldPos);
 
 			// Exit placement mode if configured
 			if (exitAfterPlace)
@@ -533,6 +540,10 @@ namespace TowerDefenseTK
 		{
 			if (towerObject == null) return;
 
+			// Capture info before destruction for the event
+			Vector3 towerPos = towerObject.transform.position;
+			TowerSO towerSO = towerObject.GetComponent<TowerUnit>()?.towerSO;
+
 			// Refund currency
 			if (refundAmount > 0 && CurrencyManager.Instance != null)
 			{
@@ -566,6 +577,10 @@ namespace TowerDefenseTK
 			}
 
 			Debug.Log($"TowerPlacementController: Removed tower at {gridPos}, refunded {refundAmount}");
+
+			// Notify toolkit subscribers
+			if (towerSO != null)
+				OnTowerSold?.Invoke(towerSO, towerPos, refundAmount);
 		}
 
 		/// <summary>

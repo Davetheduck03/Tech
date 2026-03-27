@@ -5,6 +5,18 @@ using TowerDefenseTK;
 
 public class HealthComponent : UnitComponent
 {
+    // ── Events ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Fired whenever an enemy dies. Args: the enemy's GameObject, the
+    /// DamageComponent that dealt the killing blow (null if unknown).
+    /// Subscribers can call GetComponent&lt;EnemyUnit&gt;() on the GameObject if
+    /// they need the full unit reference.
+    /// </summary>
+    public static event System.Action<GameObject, DamageComponent> OnEnemyDied;
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     public float currentHealth;
     public float maxHealth { get; private set; }
     public bool isDamagable;
@@ -81,6 +93,10 @@ public class HealthComponent : UnitComponent
 
         // Credit the kill to whichever tower landed the killing blow
         lastAttacker?.NotifyKill();
+
+        // Notify toolkit subscribers (enemies only — units with a gold reward are enemies)
+        if (data is EnemySO)
+            OnEnemyDied?.Invoke(gameObject, lastAttacker);
 
         PoolManager.Instance.Despawn(gameObject);
     }

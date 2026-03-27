@@ -41,6 +41,9 @@ public class TowerSOInspector : Editor
     SerializedProperty p_towerBuff;
     SerializedProperty p_goldPerSecond;
 
+    // Open type system
+    SerializedProperty p_customBehaviour;
+
     private void OnEnable()
     {
         // Basic Info
@@ -78,9 +81,12 @@ public class TowerSOInspector : Editor
         p_coneAngle = serializedObject.FindProperty("coneAngle");
 
         // Specialisations
-        p_statusEffect  = serializedObject.FindProperty("statusEffect");
-        p_towerBuff     = serializedObject.FindProperty("towerBuff");
-        p_goldPerSecond = serializedObject.FindProperty("goldPerSecond");
+        p_statusEffect    = serializedObject.FindProperty("statusEffect");
+        p_towerBuff       = serializedObject.FindProperty("towerBuff");
+        p_goldPerSecond   = serializedObject.FindProperty("goldPerSecond");
+
+        // Open type system
+        p_customBehaviour = serializedObject.FindProperty("customBehaviour");
     }
 
     public override void OnInspectorGUI()
@@ -119,6 +125,25 @@ public class TowerSOInspector : Editor
 
         // Re-read type after it may have just changed in the inspector
         type = (TowerType)p_towerType.enumValueIndex;
+
+        // ── Custom Behaviour (overrides TowerType dispatch when assigned) ─────
+        Section("Custom Behaviour");
+        EditorGUILayout.PropertyField(p_customBehaviour,
+            new GUIContent("Custom Behaviour",
+                "Assign a TowerBehaviourSO subclass to fully replace the built-in\n" +
+                "Turret / AoE / Support / Resource logic for this tower.\n\n" +
+                "When set, the TowerType and all combat settings below are bypassed — \n" +
+                "your Tick() implementation runs instead.\n\n" +
+                "Leave empty to use the standard enum-driven behaviour."));
+
+        bool hasCustom = p_customBehaviour.objectReferenceValue != null;
+        if (hasCustom)
+        {
+            EditorGUILayout.HelpBox(
+                "Custom Behaviour is active — TowerType and the built-in combat\n" +
+                "settings below are ignored at runtime.",
+                MessageType.Info);
+        }
 
         // ── Combat fields (Turret / AoE / debuff Support) ─────────────────────
         bool showCombatFields = type != TowerType.Resource;
