@@ -39,4 +39,4 @@ MonoBehaviour:
     useFixedTarget: 0
   coneAngle: 60
   towerBuff: {fileID: 0}
-  goldPerSecond: 8
+  goldPerSecond: 10
