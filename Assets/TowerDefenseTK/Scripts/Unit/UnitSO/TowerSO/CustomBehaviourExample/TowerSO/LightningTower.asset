@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f31d933f888144bb93d063484eaf12, type: 3}
+  m_Name: LightningTower
+  m_EditorClassIdentifier: 
+  UnitName: 
+  UnitPrefab: {fileID: 0}
+  Icon: {fileID: 0}
+  Health: 0
+  Speed: 0
+  goldReward: 0
+  damage: 0
+  damageType: {fileID: 0}
+  isTargetable: 0
+  defenseTypes: []
+  armor: 0
+  fireRate: 0
+  range: 0
+  towerType: 0
+  towerTargetType: 0
+  targetGroup: 0
+  AOEType: 0
+  projectileSpeed: 0
+  AOE_Radius: 0
+  buildCost: 0
+  previewPrefab: {fileID: 0}
+  statusEffect: {fileID: 0}
+  projectileConfig:
+    arcHeight: 0
+    useFixedTarget: 0
+  coneAngle: 60
+  towerBuff: {fileID: 0}
+  goldPerSecond: 5
+  customBehaviour: {fileID: 11400000, guid: 0ac9994ff9b2e324ebbb370ddf14f5bf, type: 2}

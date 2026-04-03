@@ -63,7 +63,6 @@ public class HealthComponent : UnitComponent
         }
     }
 
-    /// <param name="attacker">The DamageComponent that dealt this hit (null if unknown).</param>
     public void TakeDamage(float damage, DamageType damageType, DamageComponent attacker = null)
     {
         if (!isDamagable) return;
