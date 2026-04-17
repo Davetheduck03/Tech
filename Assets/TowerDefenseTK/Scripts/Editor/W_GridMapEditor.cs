@@ -13,6 +13,25 @@ public class W_GridMapEditor : EditorWindow
 		window.Show();
 	}
 
+	// ── Static active-map bridge ───────────────────────────────────────────────
+	/// <summary>
+	/// The map currently open in the Grid Map Editor window.
+	/// Other editor scripts (MapSceneGizmoDrawer, PathNodeGeneratorInspector)
+	/// read this to stay in sync without needing a direct reference.
+	/// </summary>
+	public static MapData ActiveMap { get; private set; }
+
+	/// <summary>Fired every time the active map switches or its data changes.</summary>
+	public static event System.Action OnActiveMapChanged;
+
+	private static void SetActiveMap(MapData map)
+	{
+		if (ActiveMap == map) return;
+		ActiveMap = map;
+		OnActiveMapChanged?.Invoke();
+		SceneView.RepaintAll();
+	}
+
 	private List<MapData> maps        = new List<MapData>();
 	private int           selectedMap = 0;
 	private MapData currentMap => maps.Count > 0 && selectedMap < maps.Count ? maps[selectedMap] : null;
@@ -71,7 +90,17 @@ public class W_GridMapEditor : EditorWindow
 		EditorGUILayout.LabelField("Design your tower defense map layout", EditorStyles.miniLabel);
 	}
 
-	private void OnEnable() => RefreshMaps();
+	private void OnEnable()
+	{
+		RefreshMaps();
+		SetActiveMap(currentMap);
+	}
+
+	private void OnDisable()
+	{
+		// Keep ActiveMap valid as long as a map exists, even if the window closes.
+		// Nulling would break the scene gizmo, so we leave it as-is.
+	}
 
 	private void DrawMapSelector()
 	{
@@ -96,6 +125,7 @@ public class W_GridMapEditor : EditorWindow
 		if (newSel != selectedMap)
 		{
 			selectedMap = newSel;
+			SetActiveMap(currentMap);
 			Repaint();
 		}
 	}
@@ -110,6 +140,7 @@ public class W_GridMapEditor : EditorWindow
 			if (m != null) maps.Add(m);
 		}
 		selectedMap = Mathf.Clamp(selectedMap, 0, Mathf.Max(0, maps.Count - 1));
+		SetActiveMap(currentMap);
 		Repaint();
 	}
 
@@ -375,6 +406,8 @@ public class W_GridMapEditor : EditorWindow
 		}
 
 		EditorUtility.SetDirty(currentMap);
+		OnActiveMapChanged?.Invoke();
+		SceneView.RepaintAll();
 		Repaint();
 	}
 
@@ -397,6 +430,8 @@ public class W_GridMapEditor : EditorWindow
 		}
 
 		EditorUtility.SetDirty(currentMap);
+		OnActiveMapChanged?.Invoke();
+		SceneView.RepaintAll();
 		Repaint();
 	}
 
@@ -516,22 +551,43 @@ public class W_GridMapEditor : EditorWindow
 		}
 
 		Undo.RecordObject(gridManager, "Apply Map Data");
-		gridManager.width = currentMap.width;
-		gridManager.height = currentMap.height;
+		gridManager.width    = currentMap.width;
+		gridManager.height   = currentMap.height;
 		gridManager.cellSize = currentMap.cellSize;
 
+		// ── MapLoader ─────────────────────────────────────────────────────────
 		MapLoader loader = gridManager.GetComponent<MapLoader>();
 		if (loader == null)
-		{
 			loader = gridManager.gameObject.AddComponent<MapLoader>();
-		}
 
 		Undo.RecordObject(loader, "Set Map Data");
 		loader.mapData = currentMap;
 
+		// ── PathNodeGenerator ─────────────────────────────────────────────────
+		// Use SerializedObject so the private field is written correctly
+		// and the change is picked up by Undo and the editor.
+		PathNodeGenerator generator = FindFirstObjectByType<PathNodeGenerator>();
+		if (generator != null)
+		{
+			SerializedObject so = new SerializedObject(generator);
+			SerializedProperty mapDataProp = so.FindProperty("mapData");
+			if (mapDataProp != null)
+			{
+				so.Update();
+				mapDataProp.objectReferenceValue = currentMap;
+				so.ApplyModifiedProperties();
+				Undo.RecordObject(generator, "Set PathNodeGenerator MapData");
+				EditorUtility.SetDirty(generator);
+			}
+		}
+
 		EditorUtility.SetDirty(gridManager);
 		EditorUtility.SetDirty(loader);
 
-		Debug.Log($"Applied map '{currentMap.name}' to GridManager. Run the scene to see the result.");
+		// Update the static active-map so gizmos refresh immediately
+		SetActiveMap(currentMap);
+
+		Debug.Log($"[Grid Map Editor] Applied map '{currentMap.name}' to GridManager" +
+		          (generator != null ? " and PathNodeGenerator" : "") + ".");
 	}
 }

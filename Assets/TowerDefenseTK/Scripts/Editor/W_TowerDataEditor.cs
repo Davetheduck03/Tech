@@ -23,7 +23,7 @@ public class TowerDataEditor : EditorWindow
 
     // Tabs
     private int selectedTab = 0;
-    private string[] tabNames = { "Tower Stats", "Upgrade Paths" };
+    private string[] tabNames = { "Tower Stats", "Upgrade Paths", "Behaviour" };
 
     private void OnEnable()
     {
@@ -59,6 +59,10 @@ public class TowerDataEditor : EditorWindow
         else if (selectedTab == 1)
         {
             DrawUpgradePathsTab();
+        }
+        else
+        {
+            DrawBehaviourTab();
         }
 
         EditorGUILayout.Space(15);
@@ -346,6 +350,72 @@ public class TowerDataEditor : EditorWindow
         EditorGUIUtility.PingObject(newData);
 
         Debug.Log($"Created TowerUpgradeData for {tower.name} at {assetPath}");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Tab 3 – Behaviour
+    // ─────────────────────────────────────────────────────────────
+    private void DrawBehaviourTab()
+    {
+        upgradeScrollPos = EditorGUILayout.BeginScrollView(upgradeScrollPos);
+
+        EditorGUILayout.HelpBox(
+            "Assign a TowerBehaviourSO subclass to replace the built-in targeting and attack logic.\n" +
+            "Leave empty to use the standard enum-driven behaviour.",
+            MessageType.Info);
+        EditorGUILayout.Space(8);
+
+        foreach (var tower in towers)
+            DrawTowerBehaviourSection(tower);
+
+        EditorGUILayout.EndScrollView();
+    }
+
+    private void DrawTowerBehaviourSection(TowerSO tower)
+    {
+        EditorGUILayout.BeginVertical("box");
+
+        // Header
+        EditorGUILayout.LabelField(tower.name, EditorStyles.boldLabel);
+        EditorGUILayout.Space(2);
+
+        // Behaviour ObjectField row
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label("Custom Behaviour", GUILayout.Width(LabelWidth));
+        TowerBehaviourSO oldBehaviour = tower.customBehaviour;
+        TowerBehaviourSO newBehaviour = (TowerBehaviourSO)EditorGUILayout.ObjectField(
+            oldBehaviour, typeof(TowerBehaviourSO), false);
+
+        if (oldBehaviour != newBehaviour)
+        {
+            Undo.RecordObject(tower, "Edit Custom Behaviour");
+            tower.customBehaviour = newBehaviour;
+            EditorUtility.SetDirty(tower);
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // Status / inline editor
+        if (tower.customBehaviour != null)
+        {
+            EditorGUILayout.Space(2);
+            EditorGUILayout.HelpBox(
+                $"Active: {tower.customBehaviour.GetType().Name}\n" +
+                "This SO replaces the built-in targeting and attack logic.",
+                MessageType.Info);
+
+            EditorGUILayout.Space(4);
+            Editor inlineEditor = Editor.CreateEditor(tower.customBehaviour);
+            inlineEditor.OnInspectorGUI();
+        }
+        else
+        {
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("No custom behaviour — uses standard enum-driven logic.", EditorStyles.miniLabel);
+        }
+
+        EditorGUILayout.Space(4);
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(6);
     }
 
     private void RefreshTowers()

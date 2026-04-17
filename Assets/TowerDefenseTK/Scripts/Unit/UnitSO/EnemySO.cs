@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TowerDefenseTK;
 
 [CreateAssetMenu(fileName = "New Enemy Data", menuName = "TD Toolkit/Units/Enemy")]
 public class EnemySO : UnitSO
@@ -20,4 +21,10 @@ public class EnemySO : UnitSO
 
     [Tooltip("Attacks per second against towers.")]
     public float attackRate = 1f;
+
+    [Header("Custom Behaviour")]
+    [Tooltip("Assign an EnemyBehaviorSO subclass to add fully custom per-frame logic to this enemy.\n\n" +
+             "Standard movement continues to run — the Tick() method is called on top of it every frame.\n" +
+             "Leave empty for default behaviour.")]
+    public EnemyBehaviorSO customBehavior;
 }

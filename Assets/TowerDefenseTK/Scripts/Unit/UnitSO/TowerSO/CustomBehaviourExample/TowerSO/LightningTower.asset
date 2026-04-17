@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2f31d933f888144bb93d063484eaf12, type: 3}
   m_Name: LightningTower
   m_EditorClassIdentifier: 
-  UnitName: 
+  UnitName: Lightning Tower
   UnitPrefab: {fileID: 0}
   Icon: {fileID: 0}
   Health: 0

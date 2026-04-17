@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using TowerDefenseTK;
 
 public class EnemyDataEditor : EditorWindow
 {
@@ -21,7 +22,7 @@ public class EnemyDataEditor : EditorWindow
 
     // Tabs
     private int selectedTab = 0;
-    private readonly string[] tabNames = { "Enemy Stats", "Defense Types" };
+    private readonly string[] tabNames = { "Enemy Stats", "Defense Types", "Behaviour" };
 
     private void OnEnable()  => RefreshEnemies();
 
@@ -50,8 +51,10 @@ public class EnemyDataEditor : EditorWindow
 
         if (selectedTab == 0)
             DrawStatsTab();
-        else
+        else if (selectedTab == 1)
             DrawDefenseTypesTab();
+        else
+            DrawBehaviourTab();
 
         EditorGUILayout.Space(15);
 
@@ -196,6 +199,73 @@ public class EnemyDataEditor : EditorWindow
         EditorGUILayout.Space(4);
         EditorGUILayout.EndVertical();
         EditorGUILayout.Space(8);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  Tab 3 – Custom Behaviour
+    // ─────────────────────────────────────────────────────────────
+    private void DrawBehaviourTab()
+    {
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+
+        EditorGUILayout.HelpBox(
+            "Assign an EnemyBehaviorSO subclass to each enemy to add fully custom per-frame logic.\n" +
+            "Standard movement still runs — Tick() is called on top every frame.",
+            MessageType.Info);
+        EditorGUILayout.Space(8);
+
+        foreach (var enemy in enemies)
+            DrawEnemyBehaviourSection(enemy);
+
+        EditorGUILayout.EndScrollView();
+    }
+
+    private void DrawEnemyBehaviourSection(EnemySO enemy)
+    {
+        EditorGUILayout.BeginVertical("box");
+
+        // Header
+        EditorGUILayout.LabelField(enemy.name, EditorStyles.boldLabel);
+        EditorGUILayout.Space(2);
+
+        // Behaviour ObjectField row
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label("Custom Behavior", GUILayout.Width(LabelWidth));
+        EnemyBehaviorSO oldBehavior = enemy.customBehavior;
+        EnemyBehaviorSO newBehavior = (EnemyBehaviorSO)EditorGUILayout.ObjectField(
+            oldBehavior, typeof(EnemyBehaviorSO), false);
+
+        if (oldBehavior != newBehavior)
+        {
+            Undo.RecordObject(enemy, "Edit Custom Behavior");
+            enemy.customBehavior = newBehavior;
+            EditorUtility.SetDirty(enemy);
+        }
+        EditorGUILayout.EndHorizontal();
+
+        // Status hint
+        if (enemy.customBehavior != null)
+        {
+            EditorGUILayout.Space(2);
+            EditorGUILayout.HelpBox(
+                $"Active: {enemy.customBehavior.GetType().Name}\n" +
+                "Tick() runs every frame alongside standard movement.",
+                MessageType.Info);
+
+            // Inline mini-editor for the assigned SO's own fields
+            EditorGUILayout.Space(4);
+            Editor inlineEditor = Editor.CreateEditor(enemy.customBehavior);
+            inlineEditor.OnInspectorGUI();
+        }
+        else
+        {
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("No custom behavior — uses default movement.", EditorStyles.miniLabel);
+        }
+
+        EditorGUILayout.Space(4);
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(6);
     }
 
     // ─────────────────────────────────────────────────────────────

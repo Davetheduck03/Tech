@@ -360,38 +360,107 @@ namespace TowerDefenseTK
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            if (!showDebugGizmos || !Application.isPlaying) return;
+            if (!showDebugGizmos) return;
 
+            if (Application.isPlaying && pathNodes.Count > 0)
+            {
+                // ── Play mode: draw live PathNode data ────────────────────────
+                DrawLiveNodeGizmos();
+            }
+            else if (!Application.isPlaying && mapData != null)
+            {
+                // ── Edit mode: draw from MapData so the grid is always visible ─
+                DrawMapDataGizmos();
+            }
+        }
+
+        /// <summary>Draw gizmos using the live runtime PathNode dictionary.</summary>
+        private void DrawLiveNodeGizmos()
+        {
             foreach (var kvp in pathNodes)
             {
                 PathNode node = kvp.Value;
+                if (node == null) continue;
                 Vector3 pos = node.transform.position;
 
-                // Color based on tile type
-                Gizmos.color = node.TileType switch
-                {
-                    TileType.Path => new Color(0.6f, 0.5f, 0.3f, 0.5f),
-                    TileType.Blocked => new Color(0.2f, 0.2f, 0.2f, 0.5f),
-                    TileType.Buildable => new Color(0.3f, 0.6f, 0.3f, 0.5f),
-                    TileType.Spawn => new Color(0.2f, 0.5f, 0.8f, 0.8f),
-                    TileType.Exit => new Color(0.8f, 0.2f, 0.2f, 0.8f),
-                    TileType.Hybrid => node.HasTower
-                        ? new Color(0.8f, 0.4f, 0.1f, 0.7f)
-                        : new Color(0.9f, 0.7f, 0.2f, 0.6f),
-                    _ => new Color(0.5f, 0.5f, 0.5f, 0.3f)
-                };
-
+                Gizmos.color = GetNodeGizmoColor(node.TileType, node.HasTower);
                 Gizmos.DrawCube(pos, Vector3.one * 0.4f);
 
-                // Draw X for non-walkable
                 if (!node.isWalkable)
                 {
                     Gizmos.color = Color.red;
-                    Gizmos.DrawLine(pos + new Vector3(-0.2f, 0, -0.2f), pos + new Vector3(0.2f, 0, 0.2f));
-                    Gizmos.DrawLine(pos + new Vector3(-0.2f, 0, 0.2f), pos + new Vector3(0.2f, 0, -0.2f));
+                    Gizmos.DrawLine(pos + new Vector3(-0.2f, 0, -0.2f), pos + new Vector3(0.2f, 0,  0.2f));
+                    Gizmos.DrawLine(pos + new Vector3(-0.2f, 0,  0.2f), pos + new Vector3(0.2f, 0, -0.2f));
                 }
             }
         }
+
+        /// <summary>
+        /// Draw gizmos in Edit mode by sampling the assigned MapData directly.
+        /// GridManager is used to convert grid coords to world positions;
+        /// if it is absent we fall back to this transform as the origin.
+        /// </summary>
+        private void DrawMapDataGizmos()
+        {
+            // Resolve world-space origin + cell size
+            GridManager gm = GridManager.Instance != null
+                ? GridManager.Instance
+                : FindFirstObjectByType<GridManager>();
+
+            float  cellSz  = gm != null ? gm.cellSize  : mapData.cellSize;
+            Vector3 origin = gm != null ? gm.transform.position : transform.position;
+
+            float half = cellSz * 0.5f;
+
+            for (int x = 0; x < mapData.width; x++)
+            {
+                for (int y = 0; y < mapData.height; y++)
+                {
+                    Vector2Int coords = new Vector2Int(x, y);
+                    TileData   tile   = mapData.GetTile(coords);
+                    TileType   type   = tile != null ? tile.type : TileType.Empty;
+
+                    // Skip empty tiles to keep the view clean
+                    if (type == TileType.Empty) continue;
+
+                    // Centre of the cell, slightly above ground
+                    Vector3 pos = origin
+                        + new Vector3(x * cellSz + half, 0.05f, y * cellSz + half);
+
+                    Gizmos.color = GetNodeGizmoColor(type, hasTower: false);
+                    Gizmos.DrawCube(pos, new Vector3(cellSz * 0.7f, 0.05f, cellSz * 0.7f));
+
+                    // Non-walkable cross overlay
+                    bool walkable = type == TileType.Empty
+                        || type == TileType.Path
+                        || type == TileType.Spawn
+                        || type == TileType.Exit
+                        || type == TileType.Hybrid;
+
+                    if (!walkable)
+                    {
+                        float r = cellSz * 0.25f;
+                        Gizmos.color = new Color(1f, 0.15f, 0.15f, 0.85f);
+                        Gizmos.DrawLine(pos + new Vector3(-r, 0.01f, -r), pos + new Vector3(r, 0.01f,  r));
+                        Gizmos.DrawLine(pos + new Vector3(-r, 0.01f,  r), pos + new Vector3(r, 0.01f, -r));
+                    }
+                }
+            }
+        }
+
+        /// <summary>Return a gizmo colour for a given TileType.</summary>
+        private static Color GetNodeGizmoColor(TileType type, bool hasTower) => type switch
+        {
+            TileType.Path      => new Color(0.76f, 0.60f, 0.30f, 0.55f),
+            TileType.Blocked   => new Color(0.20f, 0.20f, 0.20f, 0.55f),
+            TileType.Buildable => new Color(0.30f, 0.65f, 0.30f, 0.55f),
+            TileType.Spawn     => new Color(0.20f, 0.50f, 0.85f, 0.80f),
+            TileType.Exit      => new Color(0.85f, 0.20f, 0.20f, 0.80f),
+            TileType.Hybrid    => hasTower
+                                  ? new Color(0.80f, 0.40f, 0.10f, 0.70f)
+                                  : new Color(0.95f, 0.75f, 0.20f, 0.65f),
+            _                  => new Color(0.50f, 0.50f, 0.50f, 0.30f)
+        };
 #endif
 
         #endregion
