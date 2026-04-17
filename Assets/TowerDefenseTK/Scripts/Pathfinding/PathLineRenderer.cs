@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace TowerDefenseTK
 {
@@ -47,23 +48,35 @@ namespace TowerDefenseTK
         
         private void CreateDashedMaterial()
         {
-            // Use Unity's built-in Particles/Standard Unlit shader or create a custom one
-            Shader shader = Shader.Find("Particles/Standard Unlit");
-            if (shader == null)
-                shader = Shader.Find("Unlit/Color");
-                
+            // URP renames the particle shader — try URP name, then Built-in, then plain Unlit.
+            Shader shader =
+                Shader.Find("Universal Render Pipeline/Particles/Unlit") ??
+                Shader.Find("Particles/Standard Unlit") ??
+                Shader.Find("Unlit/Color");
+
             lineMaterial = new Material(shader);
             lineMaterial.color = lineColor;
-            
-            // Enable transparency
-            lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            lineMaterial.SetInt("_ZWrite", 0);
-            lineMaterial.DisableKeyword("_ALPHATEST_ON");
-            lineMaterial.EnableKeyword("_ALPHABLEND_ON");
-            lineMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+
+            bool isURP = GraphicsSettings.defaultRenderPipeline != null;
+            if (isURP)
+            {
+                // URP uses _Surface (0=Opaque, 1=Transparent) instead of keywords.
+                lineMaterial.SetFloat("_Surface", 1f);
+                lineMaterial.SetFloat("_Blend", 0f);  // Alpha blend mode
+                lineMaterial.SetInt("_ZWrite", 0);
+            }
+            else
+            {
+                // Built-in pipeline blend keywords.
+                lineMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+                lineMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+                lineMaterial.SetInt("_ZWrite", 0);
+                lineMaterial.DisableKeyword("_ALPHATEST_ON");
+                lineMaterial.EnableKeyword("_ALPHABLEND_ON");
+                lineMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            }
+
             lineMaterial.renderQueue = 3000;
-            
             lineRenderer.material = lineMaterial;
         }
         

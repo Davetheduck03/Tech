@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      MegaTank-2_0: 6254559335711207906
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

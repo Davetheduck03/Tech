@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Bazooka-0_0: 6717651416886418693
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

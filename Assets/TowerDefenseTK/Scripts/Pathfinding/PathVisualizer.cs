@@ -280,7 +280,11 @@ namespace TowerDefenseTK
 
 		private Material CreateLineMaterial()
 		{
-			Shader shader = Shader.Find("Particles/Standard Unlit") ?? Shader.Find("Sprites/Default");
+			// URP renames the particle shader; try URP name first, then Built-in, then plain sprite fallback.
+			Shader shader =
+				Shader.Find("Universal Render Pipeline/Particles/Unlit") ??
+				Shader.Find("Particles/Standard Unlit") ??
+				Shader.Find("Sprites/Default");
 			Material mat = new Material(shader);
 			mat.color = lineColor;
 			CreateDashTexture(mat);

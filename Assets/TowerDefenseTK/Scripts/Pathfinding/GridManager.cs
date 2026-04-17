@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class GridManager : MonoBehaviour
 {
@@ -34,13 +35,13 @@ public class GridManager : MonoBehaviour
 
 	private void CreateGLMaterial()
 	{
-		// Standard hidden shader that works in every render pipeline
-		Shader shader = Shader.Find("Hidden/Internal-Colored");
-		if (shader == null)
-		{
-			// Fallback — exists in all Unity versions
-			shader = Shader.Find("Sprites/Default");
-		}
+		// Hidden/Internal-Colored works in both Built-in and URP.
+		// Universal Render Pipeline/2D/Sprite-Unlit-Default is the URP sprite shader.
+		// Sprites/Default is the Built-in fallback.
+		Shader shader =
+			Shader.Find("Hidden/Internal-Colored") ??
+			Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default") ??
+			Shader.Find("Sprites/Default");
 
 		glMaterial = new Material(shader);
 		glMaterial.hideFlags = HideFlags.HideAndDontSave;
@@ -51,18 +52,24 @@ public class GridManager : MonoBehaviour
 		glMaterial.SetInt("_ZWrite", 0);
 	}
 
-	// OnPostRender is called by the camera after it finishes rendering.
-	// This must be on a script attached to the camera, OR we use Camera.onPostRender.
-	// We register via the callback so this script can live on any GameObject.
+	// Camera.onPostRender fires in the Built-in pipeline.
+	// RenderPipelineManager.endCameraRendering fires in URP / HDRP.
+	// Both are subscribed so the grid draws correctly regardless of which
+	// pipeline is active — only one of the two will ever fire at runtime.
 	private void OnEnable()
 	{
 		Camera.onPostRender += DrawGL;
+		RenderPipelineManager.endCameraRendering += DrawGLSRP;
 	}
 
 	private void OnDisable()
 	{
 		Camera.onPostRender -= DrawGL;
+		RenderPipelineManager.endCameraRendering -= DrawGLSRP;
 	}
+
+	// Adapter — strips the ScriptableRenderContext arg that the SRP event passes.
+	private void DrawGLSRP(ScriptableRenderContext ctx, Camera cam) => DrawGL(cam);
 
 	private void OnDestroy()
 	{
