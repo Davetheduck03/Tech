@@ -41,7 +41,20 @@ public class HealthComponent : UnitComponent
 
         renderers = GetComponentsInChildren<Renderer>();
         propertyBlock = new MaterialPropertyBlock();
+
+        // Read the actual material color so the flash reverts to the correct color
         originalColor = Color.white;
+        if (renderers != null && renderers.Length > 0)
+        {
+            Material mat = renderers[0].sharedMaterial;
+            if (mat != null)
+            {
+                if (mat.HasProperty("_BaseColor"))       // URP/Lit
+                    originalColor = mat.GetColor("_BaseColor");
+                else if (mat.HasProperty("_Color"))      // Built-in Standard
+                    originalColor = mat.GetColor("_Color");
+            }
+        }
     }
 
     private void Update()
@@ -50,15 +63,22 @@ public class HealthComponent : UnitComponent
         {
             flashTimer -= Time.deltaTime;
 
-            float t = flashTimer / flashDuration;
-            Color currentColor = Color.Lerp(originalColor, flashColor, t);
-
-            propertyBlock.SetColor("_Color", currentColor);
-            propertyBlock.SetColor("_BaseColor", currentColor); // For URP/HDRP
-
-            for (int i = 0; i < renderers.Length; i++)
+            if (flashTimer > 0f)
             {
-                renderers[i].SetPropertyBlock(propertyBlock);
+                float t = flashTimer / flashDuration;
+                Color currentColor = Color.Lerp(originalColor, flashColor, t);
+
+                propertyBlock.SetColor("_Color", currentColor);
+                propertyBlock.SetColor("_BaseColor", currentColor); // URP/HDRP
+
+                for (int i = 0; i < renderers.Length; i++)
+                    renderers[i].SetPropertyBlock(propertyBlock);
+            }
+            else
+            {
+                // Flash complete — clear the property block so the material color is restored
+                for (int i = 0; i < renderers.Length; i++)
+                    renderers[i].SetPropertyBlock(null);
             }
         }
     }
