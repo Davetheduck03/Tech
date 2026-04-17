@@ -2848,6 +2848,10 @@ PrefabInstance:
       propertyPath: buttonContainer
       value: 
       objectReference: {fileID: 280873568}
+    - target: {fileID: 3552024295728438199, guid: 2dc8d09ef8deed34bb1ef13452a43f2f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.01
+      objectReference: {fileID: 0}
     - target: {fileID: 4292407032108511928, guid: 2dc8d09ef8deed34bb1ef13452a43f2f, type: 3}
       propertyPath: m_Name
       value: Managers
