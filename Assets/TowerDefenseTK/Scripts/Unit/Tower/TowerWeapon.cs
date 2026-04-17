@@ -35,9 +35,11 @@ namespace TowerDefenseTK
         // Support tower aura
         [Header("Support Tower")]
         [SerializeField] private LayerMask enemyLayer;
-        [Tooltip("Layer mask for allied towers. Used by Buff-type support towers.")]
+        [Tooltip("Layer mask for allied towers. Used by Buff-type support towers.\n" +
+                 "Leave as Nothing to scan all layers (slower but zero setup required).")]
         [SerializeField] private LayerMask towerLayer;
         private float supportPulseTimer;
+        private bool _towerLayerWarned; // suppress repeated console spam
 
         // Cached buff component on this tower (null if tower has none)
         private TowerBuffComponent buffComponent;
@@ -206,28 +208,42 @@ namespace TowerDefenseTK
             float effectiveRange = GetEffectiveRange();
             float halfAngle      = parentTower.towerSO.coneAngle * 0.5f;
             Vector3 origin       = parentTower.transform.position;
-            Vector3 forward      = transform.forward; // weapon head faces target
+            Vector3 forward      = transform.forward;
 
-            Collider[] hits = Physics.OverlapSphere(origin, effectiveRange, enemyLayer);
-            foreach (Collider hit in hits)
+            if ((int)enemyLayer != 0)
             {
-                Vector3 dirToEnemy = (hit.transform.position - origin).normalized;
-                if (Vector3.Angle(forward, dirToEnemy) <= halfAngle)
-                    damageComponent.TryDealDamage(hit.gameObject);
+                Collider[] hits = Physics.OverlapSphere(origin, effectiveRange, enemyLayer);
+                foreach (Collider hit in hits)
+                {
+                    Vector3 dir = (hit.transform.position - origin).normalized;
+                    if (Vector3.Angle(forward, dir) <= halfAngle)
+                        HitEnemy(hit.gameObject);
+                }
+            }
+            else if (EnemyManager.Instance != null)
+            {
+                var enemies = EnemyManager.Instance.GetEnemiesInRange(
+                    origin, effectiveRange, parentTower.towerSO.targetGroup);
+                foreach (var enemy in enemies)
+                {
+                    Vector3 dir = (enemy.transform.position - origin).normalized;
+                    if (Vector3.Angle(forward, dir) <= halfAngle)
+                        HitEnemy(enemy.gameObject);
+                }
             }
         }
 
         /// <summary>
-        /// Circle AOE — instant 360° pulse damage around the tower, fired at the tower's fire rate.
+        /// Circle AOE — instant 360° pulse around the tower at the tower's fire rate.
+        /// Hits everything in range simultaneously.
         ///
-        /// No rotation is needed; the tower hits everything within range simultaneously.
-        /// Good for ground-based shockwaves or area mines.
-        ///
+        /// Falls back to EnemyManager when enemyLayer is "Nothing" so no layer setup is required.
         /// Configure via TowerSO:  range = pulse radius, fireRate = pulses per second.
         /// </summary>
         private void CircleAOETick()
         {
-            if (Time.time - lastFireTime < 1f / GetEffectiveFireRate()) return;
+            float interval = GetEffectiveFireRate() > 0f ? 1f / GetEffectiveFireRate() : float.MaxValue;
+            if (Time.time - lastFireTime < interval) return;
 
             lastFireTime = Time.time;
             TriggerRecoil();
@@ -235,26 +251,59 @@ namespace TowerDefenseTK
             float effectiveRange = GetEffectiveRange();
             Vector3 origin       = parentTower.transform.position;
 
-            Collider[] hits = Physics.OverlapSphere(origin, effectiveRange, enemyLayer);
-            foreach (Collider hit in hits)
-                damageComponent.TryDealDamage(hit.gameObject);
+            if ((int)enemyLayer != 0)
+            {
+                Collider[] hits = Physics.OverlapSphere(origin, effectiveRange, enemyLayer);
+                foreach (Collider hit in hits)
+                    HitEnemy(hit.gameObject);
+            }
+            else if (EnemyManager.Instance != null)
+            {
+                var enemies = EnemyManager.Instance.GetEnemiesInRange(
+                    origin, effectiveRange, parentTower.towerSO.targetGroup);
+                foreach (var enemy in enemies)
+                    HitEnemy(enemy.gameObject);
+            }
         }
 
         #endregion
 
         /// <summary>
+        /// Central hit handler for all AOE ticks.
+        ///
+        /// • If a DamageComponent is assigned, delegates fully to it (damage + on-hit effect).
+        /// • If DamageComponent is missing (e.g. pure slow/debuff tower), applies the
+        ///   TowerSO's statusEffect directly so no DamageComponent is required.
+        /// </summary>
+        private void HitEnemy(GameObject target)
+        {
+            if (damageComponent != null)
+            {
+                damageComponent.TryDealDamage(target);
+            }
+            else
+            {
+                // No DamageComponent — apply status effect directly (pure debuff tower)
+                StatusEffectSO effect = parentTower.towerSO.statusEffect;
+                if (effect != null)
+                    target.GetComponent<StatusEffectComponent>()?.Apply(effect);
+            }
+        }
+
+        /// <summary>
         /// Pulses every 0.5 s and handles two mutually exclusive support modes:
         ///
         /// ENEMY DEBUFF — if statusEffect is set on the TowerSO:
-        ///   Applies the StatusEffectSO (Slow, Stun, DOT) to every enemy in range.
-        ///   Used by the AOE Slow turret and any other debuff support tower.
+        ///   Uses EnemyManager (no layer-mask required) to find all live enemies in
+        ///   range and applies the StatusEffectSO (Slow, Stun, DOT) to each one.
         ///
         /// ALLIED BUFF — if towerBuff is set on the TowerSO:
-        ///   Applies the TowerBuffSO (fire-rate / damage / range boost) to every
-        ///   allied tower in range that has a TowerBuffComponent attached.
-        ///   The buff tower itself is excluded so it doesn't buff itself.
+        ///   Physics.OverlapSphere with the towerLayer mask (falls back to all layers
+        ///   when towerLayer is "Nothing") finds every collider in range; any that
+        ///   has a TowerBuffComponent anywhere in its hierarchy is buffed.
+        ///   The buff tower itself is excluded.
         ///
-        /// Both fields can technically be set at the same time (hybrid tower).
+        /// Both fields can be set simultaneously (hybrid tower).
         /// </summary>
         private void SupportTick()
         {
@@ -265,31 +314,46 @@ namespace TowerDefenseTK
             supportPulseTimer = 0f;
 
             float effectiveRange = GetEffectiveRange();
+            Vector3 origin = parentTower.transform.position;
 
             // ── Enemy debuff aura ─────────────────────────────────────────────
             StatusEffectSO effect = parentTower.towerSO.statusEffect;
-            if (effect != null)
+            if (effect != null && EnemyManager.Instance != null)
             {
-                Collider[] enemyHits = Physics.OverlapSphere(
-                    parentTower.transform.position, effectiveRange, enemyLayer);
+                var enemies = EnemyManager.Instance.GetEnemiesInRange(
+                    origin, effectiveRange, TargetGroup.Both);
 
-                foreach (var hit in enemyHits)
-                    hit.GetComponent<StatusEffectComponent>()?.Apply(effect);
+                foreach (var enemy in enemies)
+                    enemy.GetComponent<StatusEffectComponent>()?.Apply(effect);
             }
 
             // ── Allied tower buff aura ────────────────────────────────────────
             TowerBuffSO buff = parentTower.towerSO.towerBuff;
             if (buff != null)
             {
-                Collider[] towerHits = Physics.OverlapSphere(
-                    parentTower.transform.position, effectiveRange, towerLayer);
+                // When towerLayer is "Nothing" (value 0), fall back to all layers
+                // so the buff works without any Inspector setup.
+                int queryMask = (int)towerLayer != 0 ? (int)towerLayer : ~0;
+
+                if ((int)towerLayer == 0 && !_towerLayerWarned)
+                {
+                    _towerLayerWarned = true;
+                    Debug.LogWarning(
+                        $"[TowerWeapon] '{parentTower.name}': towerLayer is not set. " +
+                        "Scanning all layers — assign a dedicated tower layer for better performance.",
+                        this);
+                }
+
+                Collider[] towerHits = Physics.OverlapSphere(origin, effectiveRange, queryMask);
 
                 foreach (var hit in towerHits)
                 {
-                    // Don't buff the buff tower itself
-                    if (hit.gameObject == parentTower.gameObject) continue;
+                    // Don't buff this tower itself
+                    if (hit.transform.IsChildOf(parentTower.transform) ||
+                        hit.gameObject == parentTower.gameObject) continue;
 
-                    hit.GetComponent<TowerBuffComponent>()?.ApplyBuff(buff);
+                    // GetComponentInParent handles colliders on child mesh objects
+                    hit.GetComponentInParent<TowerBuffComponent>()?.ApplyBuff(buff);
                 }
             }
         }
@@ -302,6 +366,9 @@ namespace TowerDefenseTK
         /// </summary>
         private float GetEffectiveRange() =>
             parentTower.towerSO.range * (buffComponent != null ? buffComponent.RangeMultiplier : 1f);
+
+        /// <summary>Public read-only access to the effective range (used by UI / range indicators).</summary>
+        public float EffectiveRange => GetEffectiveRange();
 
         /// <summary>
         /// Effective fire rate factoring in any active TowerBuffComponent multiplier.

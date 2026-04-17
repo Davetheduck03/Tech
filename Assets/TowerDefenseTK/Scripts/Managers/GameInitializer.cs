@@ -1,12 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class GameInitializer : MonoBehaviour
+namespace TowerDefenseTK
 {
-
-    private void Awake()
+    public class GameInitializer : MonoBehaviour
     {
-
+        private void Awake()
+        {
+        }
     }
 }

@@ -32,7 +32,8 @@ namespace TowerDefenseTK
         public float duration = 2f;
 
         [Header("Visual")]
-        [Tooltip("Tint applied to the enemy while this effect is active.")]
+        [Tooltip("Tint applied to the enemy while this effect is active. " +
+                 "Leave as white to use the built-in type default (blue=Slow, yellow=Stun, orange=DOT).")]
         public Color tintColor = Color.white;
 
         // ── Slow ────────────────────────────────────────────────────────────
@@ -49,5 +50,22 @@ namespace TowerDefenseTK
         public DamageType dotDamageType;
 
         // Stun has no extra fields — duration is all that matters.
+
+#if UNITY_EDITOR
+        // Pre-fill a sensible tint when the effect type is changed in the Inspector.
+        private void OnValidate()
+        {
+            if (tintColor == Color.white)
+            {
+                tintColor = effectType switch
+                {
+                    StatusEffectType.Slow => new Color(0.25f, 0.65f, 1.00f),
+                    StatusEffectType.Stun => new Color(1.00f, 0.90f, 0.10f),
+                    StatusEffectType.DOT  => new Color(1.00f, 0.40f, 0.10f),
+                    _ => Color.white
+                };
+            }
+        }
+#endif
     }
 }

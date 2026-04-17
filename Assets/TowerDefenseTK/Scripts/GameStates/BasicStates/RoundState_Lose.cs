@@ -1,21 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class RoundState_Lose : RoundState_Base
+namespace TowerDefenseTK
 {
-    public override void EnterState(GameManager round)
+    public class RoundState_Lose : RoundState_Base
     {
-        throw new System.NotImplementedException();
-    }
-
-    public override void ExitState(GameManager round)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public override void UpdateState(GameManager round)
-    {
-        throw new System.NotImplementedException();
+        public override void EnterState(GameManager round)  { }
+        public override void ExitState(GameManager round)   { }
+        public override void UpdateState(GameManager round) { }
     }
 }

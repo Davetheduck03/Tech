@@ -1,56 +1,39 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using TowerDefenseTK;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+namespace TowerDefenseTK
 {
-    public static GameManager Instance;
-    [Header("Variables")]
-
-
-
-
-    [Header("RoundState")]
-
-    public RoundState_Base currentState;
-    public RoundState_Start Start = new RoundState_Start();
-    public RoundState_Win Win = new RoundState_Win();
-    public RoundState_InGame InGame = new RoundState_InGame();
-    public RoundState_Lose Lose = new RoundState_Lose();
-
-    private void Awake()
+    public class GameManager : MonoBehaviour
     {
-        GameManager.Instance = this;
-    }
+        public static GameManager Instance;
 
-    public void Init()
-    {
-        SwitchState(Start);
-    }
+        [Header("RoundState")]
+        public RoundState_Base currentState;
+        public RoundState_Start Start = new RoundState_Start();
+        public RoundState_Win Win = new RoundState_Win();
+        public RoundState_InGame InGame = new RoundState_InGame();
+        public RoundState_Lose Lose = new RoundState_Lose();
 
-    public RoundState_Base GetCurrentState()
-    {
-        return currentState;
-    }
-
-    public void SwitchState(RoundState_Base state)
-    {
-        if (currentState != null)
+        private void Awake()
         {
-            currentState.ExitState(this);
+            Instance = this;
         }
-        currentState = state;
-        state.EnterState(this);
-    }
 
-    private void Update()
-    {
-        if (currentState == null)
+        public void Init() => SwitchState(Start);
+
+        public RoundState_Base GetCurrentState() => currentState;
+
+        public void SwitchState(RoundState_Base state)
         {
-            return;
+            currentState?.ExitState(this);
+            currentState = state;
+            state.EnterState(this);
         }
-        currentState.UpdateState(this);
+
+        private void Update()
+        {
+            if (currentState == null) return;
+            currentState.UpdateState(this);
+        }
     }
 }

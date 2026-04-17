@@ -6,6 +6,7 @@ namespace TowerDefenseTK
     /// <summary>
     /// Purely handles initiating movement. All pathfinding is handled by Astar.
     /// </summary>
+    [RequireComponent(typeof(UnitPathFollower))]
     public class MovementComponent : UnitComponent
     {
         public float movement_Speed;
@@ -31,7 +32,13 @@ namespace TowerDefenseTK
         {
             movement_Speed = data.Speed;
             agent = GetComponent<UnitPathFollower>();
-            statusEffect = GetComponent<StatusEffectComponent>(); // may be null — that's fine
+
+            // Auto-add StatusEffectComponent if missing — existing prefabs created before
+            // the [RequireComponent] was added won't have it, and without it slow/stun
+            // can never work because EffectiveSpeed falls back to movement_Speed.
+            statusEffect = GetComponent<StatusEffectComponent>();
+            if (statusEffect == null)
+                statusEffect = gameObject.AddComponent<StatusEffectComponent>();
 
             var enemy = GetComponent<BaseEnemy>();
             if (enemy != null) enemy.isFlying = isFlying;

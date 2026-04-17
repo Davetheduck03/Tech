@@ -48,7 +48,7 @@ namespace TowerDefenseTK
             };
         }
 
-        private List<BaseEnemy> GetEnemiesInRange(Vector3 pos, float range, TargetGroup group)
+        public List<BaseEnemy> GetEnemiesInRange(Vector3 pos, float range, TargetGroup group)
         {
             var list = new List<BaseEnemy>(activeEnemies.Count);
             foreach (var e in activeEnemies)

@@ -55,7 +55,13 @@ namespace TowerDefenseTK
         private Renderer[]      renderers;
         private MaterialPropertyBlock propBlock;
 
-        private static readonly Color DefaultTint = Color.white;
+        private static readonly Color DefaultTint     = Color.white;
+
+        // Per-type fallback colors used when the SO's tintColor is still the default white.
+        // Designers can override these by setting a custom tintColor on the StatusEffectSO asset.
+        private static readonly Color DefaultSlowTint = new Color(0.25f, 0.65f, 1.00f); // icy blue
+        private static readonly Color DefaultStunTint = new Color(1.00f, 0.90f, 0.10f); // bright yellow
+        private static readonly Color DefaultDOTTint  = new Color(1.00f, 0.40f, 0.10f); // orange
 
         // ── Public state ─────────────────────────────────────────────────────
 
@@ -91,6 +97,11 @@ namespace TowerDefenseTK
         {
             if (activeEffects.Count == 0) return;
 
+            // Re-enforce the tint every frame while any effect is active.
+            // Without this, HealthComponent's damage-flash (SetPropertyBlock null)
+            // permanently clears the tint until the next SupportTick pulse.
+            UpdateVisuals();
+
             bool visualDirty = false;
             float dt = Time.deltaTime;
 
@@ -101,7 +112,6 @@ namespace TowerDefenseTK
                 // ── DOT tick ────────────────────────────────────────────────
                 if (e.data.effectType == StatusEffectType.DOT && healthComponent != null)
                 {
-                    // Pass the source DamageComponent so kill credit flows correctly
                     healthComponent.TakeDamage(e.data.damagePerSecond * dt, e.data.dotDamageType, e.source);
                 }
 
@@ -212,7 +222,23 @@ namespace TowerDefenseTK
         private Color TintForType(StatusEffectType type)
         {
             foreach (var e in activeEffects)
-                if (e.data.effectType == type) return e.data.tintColor;
+            {
+                if (e.data.effectType != type) continue;
+
+                // If the designer has set a custom color on the SO, use it.
+                // Otherwise fall back to the sensible per-type default so slow is
+                // always blue, stun always yellow, DOT always orange out of the box.
+                if (e.data.tintColor != Color.white)
+                    return e.data.tintColor;
+
+                return type switch
+                {
+                    StatusEffectType.Slow => DefaultSlowTint,
+                    StatusEffectType.Stun => DefaultStunTint,
+                    StatusEffectType.DOT  => DefaultDOTTint,
+                    _ => DefaultTint
+                };
+            }
             return DefaultTint;
         }
     }

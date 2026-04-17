@@ -27,7 +27,7 @@ MonoBehaviour:
   range: 8
   towerType: 1
   towerTargetType: 0
-  targetGroup: 0
+  targetGroup: 2
   AOEType: 1
   projectileSpeed: 8
   AOE_Radius: 2.5
@@ -40,3 +40,4 @@ MonoBehaviour:
   coneAngle: 60
   towerBuff: {fileID: 0}
   goldPerSecond: 0
+  customBehaviour: {fileID: 0}

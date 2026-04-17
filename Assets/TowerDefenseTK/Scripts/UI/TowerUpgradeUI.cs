@@ -37,10 +37,17 @@ namespace TowerDefenseTK
                 sellButton.onClick.AddListener(OnSellButtonClicked);
             }
 
-            // Setup close button
+            // Setup close button — route through TowerSelectionManager so the range
+            // indicator and selection state are cleaned up properly.
             if (closeButton != null)
             {
-                closeButton.onClick.AddListener(HideUpgradePanel);
+                closeButton.onClick.AddListener(() =>
+                {
+                    if (TowerSelectionManager.Instance != null)
+                        TowerSelectionManager.Instance.DeselectTower();
+                    else
+                        HideUpgradePanel();
+                });
             }
         }
 

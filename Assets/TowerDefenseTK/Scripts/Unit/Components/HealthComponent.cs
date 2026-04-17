@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TowerDefenseTK;
+
+namespace TowerDefenseTK
+{
 
 public class HealthComponent : UnitComponent
 {
@@ -117,6 +119,9 @@ public class HealthComponent : UnitComponent
         if (data is EnemySO)
             OnEnemyDied?.Invoke(gameObject, lastAttacker);
 
-        PoolManager.Instance.Despawn(gameObject);
+        if (PoolManager.Instance != null)
+            PoolManager.Instance.Despawn(gameObject);
     }
 }
+
+} // namespace TowerDefenseTK

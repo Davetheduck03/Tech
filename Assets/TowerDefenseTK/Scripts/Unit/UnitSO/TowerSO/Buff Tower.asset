@@ -40,3 +40,4 @@ MonoBehaviour:
   coneAngle: 60
   towerBuff: {fileID: 11400000, guid: fe0b857ad7925834c800205fbe0a2a5a, type: 2}
   goldPerSecond: 0
+  customBehaviour: {fileID: 0}

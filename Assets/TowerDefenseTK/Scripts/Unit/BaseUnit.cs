@@ -1,21 +1,19 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BaseUnit : MonoBehaviour
+namespace TowerDefenseTK
 {
-    [SerializeField] protected UnitSO unitData;
-
-    private List<UnitComponent> components = new List<UnitComponent>();
-
-    protected virtual void Awake()
+    public class BaseUnit : MonoBehaviour
     {
-        // Get all components that inherit from UnitComponent
-        GetComponents(components);
+        [SerializeField] protected UnitSO unitData;
 
-        foreach (var comp in components)
+        private List<UnitComponent> components = new List<UnitComponent>();
+
+        protected virtual void Awake()
         {
-            comp.Setup(this, unitData);
+            GetComponents(components);
+            foreach (var comp in components)
+                comp.Setup(this, unitData);
         }
     }
 }

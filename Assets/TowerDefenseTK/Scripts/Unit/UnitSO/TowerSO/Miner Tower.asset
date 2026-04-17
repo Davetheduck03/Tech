@@ -40,3 +40,4 @@ MonoBehaviour:
   coneAngle: 60
   towerBuff: {fileID: 0}
   goldPerSecond: 10
+  customBehaviour: {fileID: 0}

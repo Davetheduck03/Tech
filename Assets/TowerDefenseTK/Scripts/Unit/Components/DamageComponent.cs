@@ -43,7 +43,10 @@ public class DamageComponent : UnitComponent
         if (onHitEffect != null)
         {
             var statusComp = target.GetComponent<StatusEffectComponent>();
-            statusComp?.Apply(onHitEffect, this);
+            if (statusComp != null)
+                statusComp.Apply(onHitEffect, this);
+            else
+                Debug.LogWarning($"[DamageComponent] {target.name} has no StatusEffectComponent — slow/stun won't apply!");
         }
     }
 

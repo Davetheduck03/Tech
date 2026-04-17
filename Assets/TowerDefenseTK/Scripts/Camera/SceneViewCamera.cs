@@ -3,6 +3,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
+namespace TowerDefenseTK
+{
+
 /// <summary>
 /// RTS-style orbit camera with pan, rotation, and zoom.
 /// Compatible with both the legacy Input Manager and the new Input System package.
@@ -220,6 +223,7 @@ public class SceneViewCamera : MonoBehaviour
     private void HandleFocus()
     {
         if (!FKeyDown) return;
+        if (Camera.main == null) { Debug.LogWarning("[SceneViewCamera] No MainCamera found. Tag your camera as MainCamera."); return; }
 
         Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
         Ray ray = Camera.main.ScreenPointToRay((Vector3)MousePos);
@@ -271,3 +275,5 @@ public class SceneViewCamera : MonoBehaviour
         Gizmos.DrawLine(transform.position, pivotPoint);
     }
 }
+
+} // namespace TowerDefenseTK

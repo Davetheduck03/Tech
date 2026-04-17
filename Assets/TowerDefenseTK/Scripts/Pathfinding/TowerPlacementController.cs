@@ -1,5 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace TowerDefenseTK
 {
@@ -12,6 +16,9 @@ namespace TowerDefenseTK
 	/// - Enemy presence at placement location
 	/// - Hybrid tiles (walkable + buildable, tower blocks path)
 	/// </summary>
+	// Run before TowerSelectionManager (default order 0) so ClickConsumed is set
+	// before selection logic can inspect it in the same frame.
+	[DefaultExecutionOrder(-10)]
 	public class TowerPlacementController : MonoBehaviour
 	{
 		public static TowerPlacementController Instance;
@@ -38,17 +45,71 @@ namespace TowerDefenseTK
 		[SerializeField] private bool exitAfterPlace = true;
 		[SerializeField] private KeyCode cancelKey = KeyCode.Escape;
 
+		[Header("Range Indicator")]
+		[Tooltip("Colour of the range ring shown while hovering a placement.")]
+		[SerializeField] private Color rangeIndicatorColor = new Color(1f, 1f, 1f, 0.55f);
+
 		// State
-		private GameObject previewObject;
-		private TowerSO selectedTower;
-		private Plane groundPlane;
-		private bool isValidPlacement;
-		private bool isPlacing;
-		private bool isHybridTile;
+		private GameObject    previewObject;
+		private TowerSO       selectedTower;
+		private Plane         groundPlane;
+		private bool          isValidPlacement;
+		private bool          isPlacing;
+		private bool          isHybridTile;
+		private RangeIndicator previewRangeIndicator;
+
+		/// <summary>
+		/// True for one frame when the player's left-click was consumed by placement logic
+		/// (even if placement was invalid). TowerSelectionManager reads this to avoid
+		/// raycasting into the world on the same frame a placement click was handled.
+		/// </summary>
+		public bool ClickConsumed { get; private set; }
 
 		// Cached references
 		private GridManager gridManager;
+		private MapLoader mapLoader;
 		private List<Renderer> previewRenderers = new List<Renderer>();
+
+		// ── Input Abstraction ─────────────────────────────────────────────────
+#if ENABLE_INPUT_SYSTEM
+		private static Vector2 MousePos         => Mouse.current?.position.ReadValue() ?? Vector2.zero;
+		private static bool    LeftClickDown    => Mouse.current?.leftButton.wasPressedThisFrame  ?? false;
+		private static bool    RightClickDown   => Mouse.current?.rightButton.wasPressedThisFrame ?? false;
+
+		private static Key ToKey(KeyCode kc) => kc switch
+		{
+			KeyCode.Escape       => Key.Escape,
+			KeyCode.Space        => Key.Space,
+			KeyCode.Return       => Key.Enter,
+			KeyCode.Tab          => Key.Tab,
+			KeyCode.Backspace    => Key.Backspace,
+			KeyCode.Delete       => Key.Delete,
+			KeyCode.LeftShift    => Key.LeftShift,
+			KeyCode.RightShift   => Key.RightShift,
+			KeyCode.LeftControl  => Key.LeftCtrl,
+			KeyCode.RightControl => Key.RightCtrl,
+			KeyCode.LeftAlt      => Key.LeftAlt,
+			KeyCode.RightAlt     => Key.RightAlt,
+			KeyCode.A => Key.A, KeyCode.B => Key.B, KeyCode.C => Key.C,
+			KeyCode.D => Key.D, KeyCode.E => Key.E, KeyCode.F => Key.F,
+			KeyCode.G => Key.G, KeyCode.H => Key.H, KeyCode.I => Key.I,
+			KeyCode.J => Key.J, KeyCode.K => Key.K, KeyCode.L => Key.L,
+			KeyCode.M => Key.M, KeyCode.N => Key.N, KeyCode.O => Key.O,
+			KeyCode.P => Key.P, KeyCode.Q => Key.Q, KeyCode.R => Key.R,
+			KeyCode.S => Key.S, KeyCode.T => Key.T, KeyCode.U => Key.U,
+			KeyCode.V => Key.V, KeyCode.W => Key.W, KeyCode.X => Key.X,
+			KeyCode.Y => Key.Y, KeyCode.Z => Key.Z,
+			KeyCode.F1  => Key.F1,  KeyCode.F2  => Key.F2,  KeyCode.F3  => Key.F3,
+			KeyCode.F4  => Key.F4,  KeyCode.F5  => Key.F5,  KeyCode.F6  => Key.F6,
+			KeyCode.F7  => Key.F7,  KeyCode.F8  => Key.F8,  KeyCode.F9  => Key.F9,
+			KeyCode.F10 => Key.F10, KeyCode.F11 => Key.F11, KeyCode.F12 => Key.F12,
+			_ => Key.None
+		};
+#else
+		private static Vector2 MousePos       => Input.mousePosition;
+		private static bool    LeftClickDown  => Input.GetMouseButtonDown(0);
+		private static bool    RightClickDown => Input.GetMouseButtonDown(1);
+#endif
 
 		// ── Events ────────────────────────────────────────────────────────────
 		/// <summary>Fired after a tower is successfully placed. Args: TowerSO, world position.</summary>
@@ -77,10 +138,13 @@ namespace TowerDefenseTK
 		{
 			groundPlane = new Plane(Vector3.up, new Vector3(0, groundHeight, 0));
 			gridManager = GridManager.Instance;
+			mapLoader   = FindFirstObjectByType<MapLoader>();
 		}
 
 		private void Update()
 		{
+			ClickConsumed = false; // reset each frame before any logic runs
+
 			if (!isPlacing || selectedTower == null) return;
 
 			HandlePreview();
@@ -121,6 +185,7 @@ namespace TowerDefenseTK
 			}
 
 			previewRenderers.Clear();
+			previewRangeIndicator = null; // destroyed with previewObject above
 			selectedTower = null;
 			isPlacing = false;
 			isValidPlacement = false;
@@ -166,6 +231,12 @@ namespace TowerDefenseTK
 
 			// Cache renderers for color changes
 			previewRenderers.AddRange(previewObject.GetComponentsInChildren<Renderer>());
+
+			// Attach procedural range ring to preview so it follows the cursor
+			previewRangeIndicator = RangeIndicator.Attach(
+				previewObject.transform,
+				selectedTower.range,
+				rangeIndicatorColor);
 		}
 
 		private void DisableColliders(GameObject obj)
@@ -223,7 +294,12 @@ namespace TowerDefenseTK
 			isValidPlacement = ValidatePlacement(gridPos, centerPos, out PlacementError error);
 
 			// Set preview color based on validation result
-			SetPreviewColor(GetColorForError(error));
+			Color previewColor = GetColorForError(error);
+			SetPreviewColor(previewColor);
+
+			// Keep range ring colour in sync with placement validity
+			if (previewRangeIndicator != null)
+				previewRangeIndicator.SetColor(previewColor);
 		}
 
 		private Color GetColorForError(PlacementError error)
@@ -265,17 +341,30 @@ namespace TowerDefenseTK
 
 		private void HandleInput()
 		{
-			// Cancel with escape or right-click
-			if (Input.GetKeyDown(cancelKey) || Input.GetMouseButtonDown(1))
+			// Cancel with configured key or right-click
+#if ENABLE_INPUT_SYSTEM
+			bool cancelKeyDown = Keyboard.current != null &&
+			                     Keyboard.current[ToKey(cancelKey)].wasPressedThisFrame;
+#else
+			bool cancelKeyDown = Input.GetKeyDown(cancelKey);
+#endif
+			if (cancelKeyDown || RightClickDown)
 			{
 				CancelPlacement();
 				return;
 			}
 
-			// Place with left-click
-			if (Input.GetMouseButtonDown(0))
+			// Place with left-click — but never when the cursor is over a UI element
+			if (LeftClickDown)
 			{
-				TryPlaceTower();
+				// Always consume the click so TowerSelectionManager doesn't raycast
+				// into the world on this same frame, even if the click was on UI.
+				ClickConsumed = true;
+
+				bool overUI = EventSystem.current != null &&
+				              EventSystem.current.IsPointerOverGameObject();
+				if (!overUI)
+					TryPlaceTower();
 			}
 		}
 
@@ -325,7 +414,6 @@ namespace TowerDefenseTK
 			}
 
 			// Check 3: MapLoader tile check (fallback)
-			MapLoader mapLoader = FindFirstObjectByType<MapLoader>();
 			if (mapLoader != null)
 			{
 				if (!mapLoader.CanBuildAt(worldPos))
@@ -520,7 +608,13 @@ namespace TowerDefenseTK
 
 		private bool GetGroundPosition(out Vector3 hitPoint)
 		{
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			if (Camera.main == null)
+			{
+				Debug.LogWarning("[TowerPlacementController] No MainCamera found. Tag your camera as MainCamera.");
+				hitPoint = Vector3.zero;
+				return false;
+			}
+			Ray ray = Camera.main.ScreenPointToRay((Vector3)MousePos);
 
 			if (groundPlane.Raycast(ray, out float distance))
 			{
