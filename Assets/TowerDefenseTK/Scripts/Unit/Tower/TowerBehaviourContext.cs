@@ -100,6 +100,21 @@ namespace TowerDefenseTK
             DamageComponent?.TryDealDamage(enemy);
 
         /// <summary>
+        /// Rotates the weapon transform toward <paramref name="worldTarget"/> around
+        /// the Y-axis at <paramref name="degreesPerSecond"/> degrees per second.
+        /// Call every frame from <see cref="TowerBehaviourSO.Tick"/> to track a moving enemy.
+        /// </summary>
+        public void RotateWeaponToward(Vector3 worldTarget, float degreesPerSecond = 10f)
+        {
+            Vector3 dir = worldTarget - Weapon.transform.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.001f) return;
+            Quaternion target = Quaternion.LookRotation(dir);
+            Weapon.transform.rotation = Quaternion.Slerp(
+                Weapon.transform.rotation, target, degreesPerSecond * Time.deltaTime);
+        }
+
+        /// <summary>
         /// Spawns a projectile from the standard <c>"Projectile"</c> pool,
         /// initialises it with this tower's <see cref="TowerSO.projectileConfig"/>,
         /// and returns the <see cref="BaseProjectile"/> handle (null on failure).

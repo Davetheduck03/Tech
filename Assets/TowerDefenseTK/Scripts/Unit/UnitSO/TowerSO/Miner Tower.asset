@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UnitName: Mine
   UnitPrefab: {fileID: 6811615284067369269, guid: d7394b46810555a4b98f5dc55a0eef52, type: 3}
-  Icon: {fileID: 8135663367076951168, guid: 8688d56ef077bab41802e8e28862ecf9, type: 3}
+  Icon: {fileID: 21300000, guid: 8688d56ef077bab41802e8e28862ecf9, type: 3}
   Health: 40
   Speed: 0
   goldReward: 0

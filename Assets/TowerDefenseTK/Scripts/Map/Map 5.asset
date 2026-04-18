@@ -280,3 +280,49 @@ MonoBehaviour:
       enemyCount: 2
       spawnInterval: 0.85
       cooldownAfter: 15
+    - waveName: Wave 4
+      enemyPoolName: Tank Enemy
+      enemyCount: 4
+      spawnInterval: 0.85
+      cooldownAfter: 15
+    - waveName: Wave 5
+      enemyPoolName: Tank Enemy
+      enemyCount: 6
+      spawnInterval: 0.85
+      cooldownAfter: 15
+    - waveName: Wave 6
+      enemyPoolName: Tank Enemy
+      enemyCount: 8
+      spawnInterval: 0.85
+      cooldownAfter: 15
+  - waves:
+    - waveName: Wave
+      enemyPoolName: Basic Enemy
+      enemyCount: 5
+      spawnInterval: 0.5
+      cooldownAfter: 10
+    - waveName: Wave 2
+      enemyPoolName: Basic Enemy
+      enemyCount: 7
+      spawnInterval: 0.5
+      cooldownAfter: 10
+    - waveName: Wave 3
+      enemyPoolName: Basic Enemy
+      enemyCount: 9
+      spawnInterval: 0.5
+      cooldownAfter: 10
+    - waveName: Wave 4
+      enemyPoolName: Basic Enemy
+      enemyCount: 11
+      spawnInterval: 0.5
+      cooldownAfter: 10
+    - waveName: Wave 5
+      enemyPoolName: Basic Enemy
+      enemyCount: 13
+      spawnInterval: 0.5
+      cooldownAfter: 10
+    - waveName: Wave 6
+      enemyPoolName: Basic Enemy
+      enemyCount: 15
+      spawnInterval: 0.5
+      cooldownAfter: 10

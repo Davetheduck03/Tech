@@ -13,26 +13,26 @@ MonoBehaviour:
   m_Name: LightningTower
   m_EditorClassIdentifier: 
   UnitName: Lightning Tower
-  UnitPrefab: {fileID: 0}
-  Icon: {fileID: 0}
+  UnitPrefab: {fileID: 6811615284067369269, guid: 8fef7e0f7528de34c840279e068d6483, type: 3}
+  Icon: {fileID: 21300000, guid: ffaa94e3d10f1a74d8c028924071a9a2, type: 3}
   Health: 0
   Speed: 0
   goldReward: 0
-  damage: 0
+  damage: 6
   damageType: {fileID: 0}
   isTargetable: 0
   defenseTypes: []
   armor: 0
-  fireRate: 0
-  range: 0
+  fireRate: 1.5
+  range: 7
   towerType: 0
   towerTargetType: 0
-  targetGroup: 0
+  targetGroup: 2
   AOEType: 0
-  projectileSpeed: 0
+  projectileSpeed: 50
   AOE_Radius: 0
-  buildCost: 0
-  previewPrefab: {fileID: 0}
+  buildCost: 130
+  previewPrefab: {fileID: 6811615284067369269, guid: 6509ae4d232cb244f931efdaf7c9168b, type: 3}
   statusEffect: {fileID: 0}
   projectileConfig:
     arcHeight: 0

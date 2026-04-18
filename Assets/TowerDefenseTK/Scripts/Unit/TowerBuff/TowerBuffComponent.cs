@@ -234,28 +234,18 @@ namespace TowerDefenseTK
             pr.renderMode  = ParticleSystemRenderMode.Billboard;
             pr.sortingOrder = 10;
 
-            // Use Unity's built-in default particle material — it works in every
-            // render pipeline (Built-in, URP, HDRP) without needing to know the
-            // project's pipeline upfront.  The particle colour is driven by
-            // main.startColor set in UpdateVisuals(), not the material tint.
-            Material defaultParticleMat =
-                Resources.GetBuiltinResource<Material>("Default-Particle.mat");
+            // Pick an unlit particle shader that works in the active render pipeline.
+            // Default-Particle.mat only exists in the Built-in pipeline, so we probe
+            // shader names in priority order instead.
+            Shader particleShader =
+                Shader.Find("Universal Render Pipeline/Particles/Unlit") ??
+                Shader.Find("HDRP/Unlit")                                ??
+                Shader.Find("Particles/Standard Unlit")                  ??
+                Shader.Find("Sprites/Default")                           ??
+                Shader.Find("Hidden/InternalErrorShader");               // last-resort fallback
 
-            if (defaultParticleMat != null)
-            {
-                pr.material = defaultParticleMat;
-            }
-            else
-            {
-                // Fallback: try common shader names across all pipelines
-                Shader shader =
-                    Shader.Find("Universal Render Pipeline/Particles/Unlit") ??
-                    Shader.Find("Particles/Standard Unlit")                  ??
-                    Shader.Find("Sprites/Default");
-
-                if (shader != null)
-                    pr.material = new Material(shader);
-            }
+            if (particleShader != null)
+                pr.material = new Material(particleShader) { name = "BuffParticle_Runtime" };
 
             // Start stopped — only plays when a buff is active
             buffParticles.Stop();

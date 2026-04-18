@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UnitName: Buff Tower
   UnitPrefab: {fileID: 6811615284067369269, guid: 2e30a07a9a161e94c92621fb9bb9a5a8, type: 3}
-  Icon: {fileID: 8291305821292071062, guid: cd6eb6be9cdaa9349bc8820f8be8148b, type: 3}
+  Icon: {fileID: 21300000, guid: cd6eb6be9cdaa9349bc8820f8be8148b, type: 3}
   Health: 60
   Speed: 0
   goldReward: 0

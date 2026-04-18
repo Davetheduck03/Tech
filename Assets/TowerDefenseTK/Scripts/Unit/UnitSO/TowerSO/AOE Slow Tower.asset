@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UnitName: AOE Slow
   UnitPrefab: {fileID: 6811615284067369269, guid: 66bd5f135fb3d504389ab25932dfab2b, type: 3}
-  Icon: {fileID: -5789141688622347452, guid: 14b3b32fd0bfd4f4ca6d7632a24e4ef1, type: 3}
+  Icon: {fileID: 21300000, guid: 14b3b32fd0bfd4f4ca6d7632a24e4ef1, type: 3}
   Health: 80
   Speed: 0
   goldReward: 0

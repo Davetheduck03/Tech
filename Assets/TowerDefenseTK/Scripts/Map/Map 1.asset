@@ -222,4 +222,35 @@ MonoBehaviour:
   - {x: 0, y: 0}
   startingCurrency: 1500
   startingLives: 20
-  spawnerWaves: []
+  spawnerWaves:
+  - waves:
+    - waveName: Wave
+      enemyPoolName: Basic Enemy
+      enemyCount: 8
+      spawnInterval: 0.65
+      cooldownAfter: 15
+    - waveName: Wave 2
+      enemyPoolName: Basic Enemy
+      enemyCount: 14
+      spawnInterval: 0.65
+      cooldownAfter: 12
+    - waveName: Wave 3
+      enemyPoolName: Fast Enemy
+      enemyCount: 7
+      spawnInterval: 0.5
+      cooldownAfter: 12
+    - waveName: Wave 4
+      enemyPoolName: Armored Enemy
+      enemyCount: 5
+      spawnInterval: 1
+      cooldownAfter: 14
+    - waveName: Wave 5
+      enemyPoolName: Flying Enemy
+      enemyCount: 3
+      spawnInterval: 0.65
+      cooldownAfter: 14
+    - waveName: Wave 6
+      enemyPoolName: Fast Enemy
+      enemyCount: 12
+      spawnInterval: 0.65
+      cooldownAfter: 14
